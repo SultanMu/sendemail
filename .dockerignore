@@ -1,0 +1,28 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment
+venv/
+.env/
+*.env
+
+# Ignore test files and logs
+*.log
+*.out
+*.coverage
+.coverage.*
+
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
+
+# Ignore Git files
+.git/
+.gitignore
+
+# Ignore Docker files
+docker-compose.override.yml
+*.swp

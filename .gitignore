@@ -1,2 +1,8 @@
 *.xlsx
 db.sqlite3
+
+migrations/
+__pycache__/
+
+# Visual Studio Code
+.vscode/*
