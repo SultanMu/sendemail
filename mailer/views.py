@@ -58,6 +58,7 @@ class XLSReaderView(APIView):
                     if not recipient_email:
                         raise ValueError(f"Invalid row data: {row}")
                     
+                    
                     # Save to the database
                     Email.objects.create(
                         email_address=recipient_email,
@@ -89,15 +90,12 @@ class SendEmailsView(APIView):
         success_count = 0
         failure_count = 0
         
-        
-        
-        html_content = render_to_string('autosad-temp-email.html')
 
         # Iterate through the emails and send them
         for email in emails:
             try:
-                
-                html_content = render_to_string('autosad-temp-email.html') # context not added because there are not context variables in the html template
+                context = {email.name}
+                html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
                 send_mail(
                     subject='Sample Subject for now',
                     message='',
