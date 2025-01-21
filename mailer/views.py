@@ -5,6 +5,8 @@ from django.shortcuts import render
 from django.db import transaction
 # from django.http import HttpResponse
 # from django.template import loader
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
@@ -48,19 +50,20 @@ class XLSReaderView(APIView):
             with transaction.atomic():
                 # Iterate through the rows and insert emails into the database
                 for row in sheet.iter_rows(min_row=2):  # Skipping header row
-                    recipient_email = row[0].value
-                    subject = row[1].value
-                    message = row[2].value
+                    name = row[0].value
+                    recipient_email = row[1].value
+                    # message = row[2].value
 
                     # Validate row data
-                    if not recipient_email or not subject or not message:
+                    if not recipient_email:
                         raise ValueError(f"Invalid row data: {row}")
                     
                     # Save to the database
                     Email.objects.create(
                         email_address=recipient_email,
-                        subject=subject,
-                        message=message
+                        name=name
+                        # subject=subject,
+                        # message=message
                     )
 
             return Response({"message": "Emails saved successfully!"}, status=201)
@@ -85,15 +88,22 @@ class SendEmailsView(APIView):
         emails = Email.objects.all()  # Fetch all emails from the database
         success_count = 0
         failure_count = 0
+        
+        
+        
+        html_content = render_to_string('autosad-temp-email.html')
 
         # Iterate through the emails and send them
         for email in emails:
             try:
+                
+                html_content = render_to_string('autosad-temp-email.html') # context not added because there are not context variables in the html template
                 send_mail(
-                    subject=email.subject,
-                    message=email.message,
+                    subject='Sample Subject for now',
+                    message='',
                     from_email='info@autosad.ai',
                     recipient_list=[email.email_address],
+                    html_message=html_content
                 )
                 success_count += 1
             except Exception as e:
@@ -107,6 +117,8 @@ class SendEmailsView(APIView):
                 "failed": failure_count,
             }
         }, status=200 if failure_count == 0 else 500)
+
+
 
 
 # def send_emails(request):

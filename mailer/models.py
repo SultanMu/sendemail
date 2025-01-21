@@ -7,6 +7,7 @@ from django.db import models
 
 class Email(models.Model):
     email_address = models.EmailField()
-    subject = models.CharField(max_length=255)
-    message = models.TextField()
+    name = models.CharField(max_length=255)
     added_at = models.DateTimeField(auto_now_add=True)
+    # subject = models.CharField(max_length=255)
+    # message = models.TextField()

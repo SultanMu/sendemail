@@ -4,4 +4,4 @@ from .models import Email
 class EmailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Email
-        fields = ['email_address', 'subject', 'message', 'added_at']
+        fields = ['email_address', 'name', 'added_at']
