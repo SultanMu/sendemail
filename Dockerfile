@@ -16,8 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the project files
 COPY . /app/
 
-# Set the environment variables
-ENV PYTHONUNBUFFERED=1
+# # Set the environment variables
+# ENV PYTHONUNBUFFERED=1
 
 # Expose the application port
 EXPOSE 8010
