@@ -15,6 +15,7 @@ from drf_spectacular.types import OpenApiTypes
 from .models import Email
 from .serializers import EmailSerializer
 
+
 class XLSReaderView(APIView):
     parser_classes = [MultiPartParser]
 
@@ -94,7 +95,9 @@ class SendEmailsView(APIView):
         # Iterate through the emails and send them
         for email in emails:
             try:
-                context = {email.name}
+                context = {
+                    'name': email.name
+                }
                 html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
                 send_mail(
                     subject='Sample Subject for now',
@@ -118,7 +121,50 @@ class SendEmailsView(APIView):
 
 
 
+class EmailsSentView(APIView):
+    @extend_schema(
+        request=None,
+        responses={
+            200: {"message": "Emails sent successfully!", "details": "Number of emails sent and failed"},
+            500: {"error": "Error message"}
+        },
+        description="Send emails to all recipients stored in the database.",
+    )
+    def post(self, request):
+        emails = Email.objects.all()  # Fetch all emails from the database
+        success_count = 0
+        failure_count = 0
+        pass
+        
+        
+        # html_content = render_to_string('autosad-temp-email.html')
 
+        # Iterate through the emails and send them
+        # for email in emails:
+        #     try:
+                
+        #         html_content = render_to_string('autosad-temp-email.html') # context not added because there are not context variables in the html template
+        #         send_mail(
+        #             subject='Sample Subject for now',
+        #             message='',
+        #             from_email='info@autosad.ai',
+        #             recipient_list=[email.email_address],
+        #             html_message=html_content
+        #         )
+        #         success_count += 1
+        #     except Exception as e:
+        #         failure_count += 1
+        #         print(f"Failed to send email to {email.email_address}: {str(e)}")
+
+        # return Response({
+        #     "message": "Emails sent successfully!",
+        #     "details": {
+        #         "sent": success_count,
+        #         "failed": failure_count,
+        #     }
+        # }, status=200 if failure_count == 0 else 500)
+
+    pass
 # def send_emails(request):
 #     # Path to your Excel file
 #     excel_file_path = "sample_dataset.xlsx"
