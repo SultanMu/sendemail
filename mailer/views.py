@@ -65,6 +65,14 @@ class CampaignCreateView(APIView):
 
 class CampaignUpdateView(APIView):
     @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="campaign_id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description="Campaign ID",
+            ),
+        ],
         request=CampaignSerializer,
         responses={
             200: CampaignSerializer,
@@ -72,8 +80,9 @@ class CampaignUpdateView(APIView):
         },
         description="Update an existing campaign.",
     )
-    def put(self, request, campaign_id):
+    def put(self, request):
         try:
+            campaign_id = request.data.get('campaign_id')
             campaign = Campaign.objects.get(id=campaign_id)
             serializer = CampaignSerializer(campaign, data=request.data)
             if serializer.is_valid():
@@ -88,14 +97,23 @@ class CampaignUpdateView(APIView):
 
 class CampaignDeleteView(APIView):
     @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="campaign_id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description="Campaign ID",
+            ),
+        ],
         responses={
             204: None,
             500: {"error": "Error message"}
         },
         description="Delete an existing campaign.",
     )
-    def delete(self, request, campaign_id):
+    def delete(self, request):
         try:
+            campaign_id = request.data.get('campaign_id')
             campaign = Campaign.objects.get(id=campaign_id)
             campaign.delete()
             return Response(status=204)
