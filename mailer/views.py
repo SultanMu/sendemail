@@ -144,12 +144,16 @@ class XLSReaderView(APIView):
                 }
             }
         },
+        parameters={
+            OpenApiParameter("Campaign-ID", type=int, location="query", required=True)
+        },
         responses={
             201: {"message": "Emails saved successfully!"}, 
             400: {"error": "Error message"}
         },
-        description="Upload an XLS file to save email data into the database. The file should contain 'email_address', 'subject', and 'message' columns.",
+        description="Upload an XLS file to save email data into the database. The file should contain 'name' and 'email_address' columns.",
     )
+    
     def post(self, request):
         file = request.FILES.get('file')
         campaign_id = request.query_params.get('campaign_id')
@@ -188,8 +192,7 @@ class XLSReaderView(APIView):
                     # Save to the database
                     Email.objects.get_or_create(
                         email_address=recipient_email,
-                        name=name,
-                        campaign=campaign
+                        name=name
                         # subject=subject,
                         # message=message
                     )
@@ -216,12 +219,15 @@ class SendEmailsView(APIView):
         emails = Email.objects.all()  # Fetch all emails from the database
         success_count = 0
         failure_count = 0
+        
+        MESSAGE = "Thank you for applying to the AUTOSAD Get Certified program. We’re excited to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
 
         # Iterate through the emails and send them
         for email in emails:
             try:
                 context = {
-                    'name': email.name
+                    'name': email.name,
+                    'message': MESSAGE,
                 }
                 html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
                 send_mail(
