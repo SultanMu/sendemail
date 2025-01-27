@@ -28,12 +28,16 @@ class XLSReaderView(APIView):
                 }
             }
         },
+        parameters={
+            OpenApiParameter("Campaign-ID", type=int, location="query", required=True)
+        },
         responses={
             201: {"message": "Emails saved successfully!"}, 
             400: {"error": "Error message"}
         },
-        description="Upload an XLS file to save email data into the database. The file should contain 'email_address', 'subject', and 'message' columns.",
+        description="Upload an XLS file to save email data into the database. The file should contain 'name' and 'email_address' columns.",
     )
+    
     def post(self, request):
         file = request.FILES.get('file')
         if not file:
@@ -61,11 +65,9 @@ class XLSReaderView(APIView):
                     
                     
                     # Save to the database
-                    Email.objects.create(
+                    Email.objects.get_or_create(  # make sure it only checks unique emails not names
                         email_address=recipient_email,
                         name=name
-                        # subject=subject,
-                        # message=message
                     )
 
             return Response({"message": "Emails saved successfully!"}, status=201)
@@ -91,12 +93,14 @@ class SendEmailsView(APIView):
         success_count = 0
         failure_count = 0
         
+        MESSAGE = "Thank you for applying to the AUTOSAD Get Certified program. We’re excited to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
 
         # Iterate through the emails and send them
         for email in emails:
             try:
                 context = {
-                    'name': email.name
+                    'name': email.name,
+                    'message': MESSAGE,
                 }
                 html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
                 send_mail(
@@ -130,68 +134,63 @@ class EmailsSentView(APIView):
         },
         description="Send emails to all recipients stored in the database.",
     )
+    
+    
     def post(self, request):
         emails = Email.objects.all()  # Fetch all emails from the database
         success_count = 0
         failure_count = 0
         pass
         
+        # write funtion to output list of emails that are saved in the database.
         
-        # html_content = render_to_string('autosad-temp-email.html')
-
-        # Iterate through the emails and send them
-        # for email in emails:
-        #     try:
-                
-        #         html_content = render_to_string('autosad-temp-email.html') # context not added because there are not context variables in the html template
-        #         send_mail(
-        #             subject='Sample Subject for now',
-        #             message='',
-        #             from_email='info@autosad.ai',
-        #             recipient_list=[email.email_address],
-        #             html_message=html_content
-        #         )
-        #         success_count += 1
-        #     except Exception as e:
-        #         failure_count += 1
-        #         print(f"Failed to send email to {email.email_address}: {str(e)}")
-
-        # return Response({
-        #     "message": "Emails sent successfully!",
-        #     "details": {
-        #         "sent": success_count,
-        #         "failed": failure_count,
-        #     }
-        # }, status=200 if failure_count == 0 else 500)
-
-    pass
-# def send_emails(request):
-#     # Path to your Excel file
-#     excel_file_path = "sample_dataset.xlsx"
+        # learn drf_spectacular/django rest framework to create 
     
-#     # Load the Excel file
-#     wb = openpyxl.load_workbook(excel_file_path)
-#     sheet = wb.active
-    
-#     # Iterate through the rows in the file
-#     for row in sheet.iter_rows(min_row=2):  # Assuming headers in the first row
-#         recipient_email = row[0].value
-#         subject = row[1].value
-#         message = row[2].value
         
-#         # Send the email
-#         send_mail(
-#             subject=subject,
-#             message=message,
-#             from_email='info@autosad.ai',
-#             recipient_list=[recipient_email],
-#         )
-    
-#     return JsonResponse({"message": "Emails sent successfully!"})
-
-# def home(request):
-#     template = loader.get_template('autosad-email-template-new.html')
-#     return HttpResponse(template.render())
-
-# def intro(request):
-#     return HttpResponse("Welcome to this django app.")
+        
+class ListEmailsView(APIView):
+    @extend_schema(
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "message": {"type": "string"},
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {"type": "string"},
+                                "email_address": {"type": "string"}
+                            }
+                        }
+                    },
+                    "count": {"type": "integer"}
+                }
+            },
+            500: {"error": "Error message"}
+        },
+        description="Retrieve all emails stored in the database.",
+    )
+    def get(self, request):
+        try:
+            emails = Email.objects.all()
+            email_list = []
+            
+            for email in emails:
+                email_list.append({
+                    'name': email.name,
+                    'email_address': email.email_address
+                    # Add any other fields you want to include
+                })
+            
+            return Response({
+                "message": "Emails retrieved successfully",
+                "data": email_list,
+                "count": len(email_list)
+            }, status=200)
+            
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve emails: {str(e)}"
+            }, status=500)
