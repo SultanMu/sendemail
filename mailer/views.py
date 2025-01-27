@@ -126,9 +126,6 @@ class XLSReaderView(APIView):
                 }
             }
         },
-        parameters={
-            OpenApiParameter("Campaign-ID", type=int, location="query", required=True)
-        },
         responses={
             201: {"message": "Emails saved successfully!"}, 
             400: {"error": "Error message"}
