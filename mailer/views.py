@@ -31,7 +31,14 @@ class CampaignListView(APIView):
     @extend_schema(
         responses={
             200: CampaignSerializer(many=True),
-            500: OpenApiResponse({"error": "Error message"}, description="Server error"),
+            500: OpenApiResponse(
+                description="Server error",
+                examples={
+                    "application/json": {
+                        "error": "Error message"
+                    }
+                }
+            ),
         },
         description="List all existing campaigns.",
         examples=[
@@ -69,25 +76,36 @@ class CampaignCreateView(APIView):
         responses={
             201: CampaignSerializer,
             400: OpenApiResponse(
-                {"error": "Validation error details"},
-                description="Validation failed (e.g., duplicate name or missing fields)",
+                description="Validation error details",
+                examples={
+                    "application/json": {
+                        "error": "Validation error details"
+                    }
+                }
             ),
-            500: OpenApiResponse({"error": "Error message"}, description="Server error"),
+            500: OpenApiResponse(
+                description="Server error",
+                examples={
+                    "application/json": {
+                        "error": "Error message"
+                    }
+                }
+            ),
         },
         description="Create a new campaign by providing the required details.",
         examples=[
             OpenApiExample(
                 "Example Request",
                 value={
-                    "name": "Black Friday Campaign"
+                    "campaign_name": "Black Friday Campaign"
                 },
                 request_only=True,
             ),
             OpenApiExample(
                 "Example Response",
                 value={
-                    "id": 3,
-                    "name": "Black Friday Campaign",
+                    "campaign_id": 3,
+                    "campaign_name": "Black Friday Campaign",
                     "created_at": "2025-01-27T10:00:00Z",
                     "updated_at": "2025-01-27T10:00:00Z",
                 },
@@ -189,17 +207,29 @@ class XLSReaderView(APIView):
         ],
         responses={
             201: OpenApiResponse(
-                {"message": "Emails saved successfully!"},
-                description="Indicates successful processing and saving of email data.",
-            ),
+                    description="Emails saved successfully!",
+                    examples={
+                        "application/json": {
+                            "message": "Emails saved successfully!"
+                        }
+                    }
+                ),
             400: OpenApiResponse(
-                {"error": "Error message"},
-                description="Indicates an error in file format, missing data, or invalid campaign ID.",
-            ),
+                    description="Error in file format, missing data, or invalid campaign ID.",
+                    examples={
+                        "application/json": {
+                            "error": "Error message"
+                        }
+                    }
+                ),
             500: OpenApiResponse(
-                {"error": "Error message"},
-                description="Indicates a server-side error.",
-            ),
+                    description="Server-side error.",
+                    examples={
+                        "application/json": {
+                            "error": "Error message"
+                        }
+                    }
+                ),
         },
         description=(
             "Upload an Excel file to save email data into the database. "
@@ -316,14 +346,40 @@ class SendEmailsView(APIView):
             }
         },
         responses={
-            200: {
-                "message": "Emails processed.",
-                "details": {"sent": int, "failed": int},
-                "custom_message_used": "The message sent in the email."
-            },
-            400: {"error": "Invalid or missing campaign ID."},
-            404: {"error": "No emails found for the given campaign."},
-            500: {"error": "Internal server error."}
+            200: OpenApiResponse(
+                description="Emails processed successfully.",
+                examples={
+                    "application/json": {
+                        "message": "Emails processed.",
+                        "details": {"sent": 10, "failed": 2},
+                        "custom_message_used": "Thank you for applying to our program! We're thrilled to have you on board."
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid or missing campaign ID.",
+                examples={
+                    "application/json": {
+                        "error": "Invalid or missing campaign ID."
+                    }
+                }
+            ),
+            404: OpenApiResponse(
+                description="No emails found for the given campaign.",
+                examples={
+                    "application/json": {
+                        "error": "No emails found for the given campaign."
+                    }
+                }
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={
+                    "application/json": {
+                        "error": "Internal server error."
+                    }
+                }
+            )
         },
         description="Send emails to all recipients associated with a specific campaign. Optionally provide a custom message."
     )
@@ -392,10 +448,43 @@ class ListEmailView(APIView):
             OpenApiParameter("campaign_id", type=int, location="query", required=True, description="ID of the campaign to list emails for.")
         ],
         responses={
-            200: EmailSerializer(many=True),
-            400: {"error": "Invalid or missing campaign ID."},
-            404: {"error": "No emails found for the given campaign."},
-            500: {"error": "Internal server error."}
+            200: OpenApiResponse(
+                description="List of emails associated with the given campaign.",
+                examples={
+                    "application/json": [
+                        {
+                            "email_address": "john.doe@example.com",
+                            "name": "John Doe",
+                            "campaign_id": 1,
+                            "added_at": "2025-01-01T12:00:00Z"
+                        },
+                        {
+                            "email_address": "jane.smith@example.com",
+                            "name": "Jane Smith",
+                            "campaign_id": 1,
+                            "added_at": "2025-01-10T14:00:00Z"
+                        }
+                    ]
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid or missing campaign ID.",
+                examples={
+                    "application/json": {"error": "Invalid or missing campaign ID."}
+                }
+            ),
+            404: OpenApiResponse(
+                description="No emails found for the given campaign.",
+                examples={
+                    "application/json": {"error": "No emails found for the given campaign."}
+                }
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={
+                    "application/json": {"error": "Internal server error."}
+                }
+            ),
         },
         description="List all emails stored in the database for a specific campaign.",
     )
