@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mailer.apps.MailerConfig',
     'drf_spectacular',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
