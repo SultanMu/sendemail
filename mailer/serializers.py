@@ -4,10 +4,10 @@ from .models import Email, Campaign
 class EmailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Email
-        fields = ['id', 'email_address', 'name', 'campaign_name', 'added_at']
+        fields = ['email_address', 'campaign_id', 'name', 'added_at']
 
 
 class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
         model = Campaign
-        fields = ['id', 'name', 'created_at', 'updated_at', 'emails']
+        fields = ['campaign_id', 'campaign_name', 'created_at', 'updated_at', 'emails']
