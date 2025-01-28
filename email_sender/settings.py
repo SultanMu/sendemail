@@ -78,6 +78,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE":"Email Sender Swagger API definations",
+    'VERSION': '1.0.0'
 }
 
 
