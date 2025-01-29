@@ -294,7 +294,7 @@ class XLSReaderView(APIView):
                 if not recipient_email or "@" not in recipient_email:
                     invalid_rows.append({"row": row_number, "error": "Invalid or missing email address."})
                     continue
-
+                
                 # Prepare the data for bulk create
                 emails_to_save.append(
                     Email(
@@ -307,7 +307,7 @@ class XLSReaderView(APIView):
             # Step 4: Save emails to the database
             with transaction.atomic():
                 Email.objects.bulk_create(emails_to_save)
-                
+            
             if invalid_rows:
                 return Response(
                     {
@@ -341,7 +341,7 @@ class SendEmailsView(APIView):
                     }
                 },
                 'example': {
-                    'message': "Thank you for applying to our program! We're thrilled to have you on board.",
+                    'message': "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.",
                 },
             }
         },
