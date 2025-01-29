@@ -84,7 +84,7 @@ class CampaignCreateView(APIView):
                 }
             ),
             500: OpenApiResponse(
-                description="Server error",
+                description="Server err",
                 examples={
                     "application/json": {
                         "error": "Error message"
@@ -104,8 +104,8 @@ class CampaignCreateView(APIView):
             OpenApiExample(
                 "Example Response",
                 value={
-                    "campaign_id": 3,
-                    "campaign_name": "Black Friday Campaign",
+                    "campaign_id": 1,
+                    "campaign_name": "AutoSAD Marketing Campaign",
                     "created_at": "2025-01-27T10:00:00Z",
                     "updated_at": "2025-01-27T10:00:00Z",
                 },
@@ -352,7 +352,7 @@ class SendEmailsView(APIView):
                     "application/json": {
                         "message": "Emails processed.",
                         "details": {"sent": 10, "failed": 2},
-                        "custom_message_used": "Thank you for applying to our program! We're thrilled to have you on board."
+                        "custom_message_used": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
                     }
                 }
             ),
@@ -405,7 +405,6 @@ class SendEmailsView(APIView):
 
         if not custom_message:
             custom_message = "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
-        
         success_count = 0
         failure_count = 0
 
@@ -461,7 +460,7 @@ class ListEmailView(APIView):
                         {
                             "email_address": "jane.smith@example.com",
                             "name": "Jane Smith",
-                            "campaign_id": 1,
+                            "campaign_id": 2,
                             "added_at": "2025-01-10T14:00:00Z"
                         }
                     ]
