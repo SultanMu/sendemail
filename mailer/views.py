@@ -15,7 +15,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiRespon
 from drf_spectacular.types import OpenApiTypes
 from .models import Email, Campaign
 from .serializers import EmailSerializer, CampaignSerializer
-
+from django.conf import settings
 
 # 1) view for listing existing campaigns - list it with id, name
 # 2) view for adding new campaigns - user will provide campaign name and model will be created
@@ -408,30 +408,45 @@ class SendEmailsView(APIView):
         success_count = 0
         failure_count = 0
 
+        messages = []
         # Iterate through the emails and send them
         for email in emails:
-            try:
-                context = {
-                    'name': email.name,
-                    'message': custom_message,
-                }
+            
+            message = (
+                "Welcome to AUTOSAD Get Certified",
+                "",
+                settings.EMAIL_HOST_USER,
+                [email]
                 
-                html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
+            )
+            messages.append(message)
+            # try:
+            #     context = {
+            #         'name': email.name,
+            #         'message': custom_message,
+            #     }
                 
-                send_mail(
-                    subject='Welcome to AUTOSAD Get Certified',
-                    message='',
-                    from_email='info@autosad.ai',
-                    recipient_list=[email.email_address],
-                    html_message=html_content
-                )
-                success_count += 1
+            #     html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
+                
+            #     send_mail(
+            #         subject='Welcome to AUTOSAD Get Certified',
+            #         message='',
+            #         from_email='info@autosad.ai',
+            #         recipient_list=[email.email_address],
+            #         html_message=html_content
+            #     )
+            #     success_count += 1
                 
                 
             
-            except Exception as e:
-                failure_count += 1
-                # print(f"Failed to send email to {email.email_address}: {str(e)}")
+            # except Exception as e:
+            #     failure_count += 1
+            #     # print(f"Failed to send email to {email.email_address}: {str(e)}")
+
+        send_mass_mail(
+            messages,
+            fail_silently=False
+        )
 
         return Response({
             "message": "Emails sent successfully!",
