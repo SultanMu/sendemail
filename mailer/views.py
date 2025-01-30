@@ -426,6 +426,8 @@ class SendEmailsView(APIView):
                     html_message=html_content
                 )
                 success_count += 1
+                
+                
             
             except Exception as e:
                 failure_count += 1

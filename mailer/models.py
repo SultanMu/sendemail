@@ -20,7 +20,8 @@ class Campaign(models.Model):
 
 
 class Email(models.Model):
-    email_address = models.EmailField(primary_key=True) # prmarykey 
+    email_id = models.AutoField(primary_key=True)
+    email_address = models.EmailField() # prmarykey 
     campaign_id = models.ForeignKey(Campaign, on_delete=models.CASCADE, related_name='emails')
     name = models.CharField(max_length=255)
     added_at = models.DateTimeField(auto_now_add=True)
