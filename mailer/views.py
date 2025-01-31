@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.db import transaction
 # from django.http import HttpResponse
 # from django.template import loader
-from django.core.mail import send_mail
+from django.core.mail import send_mail, send_mass_mail
 from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -329,7 +329,8 @@ class XLSReaderView(APIView):
 class SendEmailsView(APIView):
     @extend_schema(
         parameters=[
-            OpenApiParameter("campaign_id", type=int, location="query", required=True, description="ID of the campaign to send emails for.")
+            OpenApiParameter("campaign_id", type=int, location="query", required=True, description="ID of the campaign to send emails for."),
+            OpenApiParameter("email_template", type=int, location="query", required=True, description="Enter 1 for AutoSAD template or 2 for XCV AI template")
         ],
         request={
             'application/json': {
@@ -386,9 +387,13 @@ class SendEmailsView(APIView):
     def post(self, request):
         # Get campaign ID from query parameters
         campaign_id = request.query_params.get("campaign_id")
+        email_template = request.query_params.get("email_template") 
         
         if not campaign_id:
             return Response({"error": "Campaign ID is required."}, status=400)
+        
+        if not email_template:
+            return Response({"error": "Email Template is required."}, status=400)
         
         try:
             campaign = Campaign.objects.get(campaign_id=campaign_id)
@@ -408,45 +413,64 @@ class SendEmailsView(APIView):
         success_count = 0
         failure_count = 0
 
+
         messages = []
         # Iterate through the emails and send them
         for email in emails:
-            
-            message = (
-                "Welcome to AUTOSAD Get Certified",
-                "",
-                settings.EMAIL_HOST_USER,
-                [email]
-                
-            )
-            messages.append(message)
-            # try:
-            #     context = {
+            # context = {
             #         'name': email.name,
             #         'message': custom_message,
             #     }
+            # if email_template == 1:
+            #     html_content = render_to_string('autosad-temp-email.html', context)
+            # elif email_template == 2:
+            #     html_content = render_to_string('XCV_AI.html', context)
+            
+            # message = (
+            #     "Welcome to AUTOSAD Get Certified",
+            #     "",
+            #     settings.EMAIL_HOST_USER,
+            #     [email],
+            #     html_message = html_content
+            # )
+            # messages.append(message)
+            
+            try:
                 
-            #     html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
                 
-            #     send_mail(
-            #         subject='Welcome to AUTOSAD Get Certified',
-            #         message='',
-            #         from_email='info@autosad.ai',
-            #         recipient_list=[email.email_address],
-            #         html_message=html_content
-            #     )
-            #     success_count += 1
+                context = {
+                    'name': email.name,
+                    'message': custom_message,
+                }
+                
+                html_content = ""
+                
+                if email_template == 1:
+                    html_content = render_to_string('autosad-temp-email.html', context)
+                elif email_template == 2:
+                    html_content = render_to_string('XCV_AI.html', context)
+                
+                # html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
+                
+                send_mail(
+                    subject='Welcome to AUTOSAD Get Certified',
+                    message='',
+                    from_email='info@autosad.ai',
+                    recipient_list=[email.email_address],
+                    html_message=html_content
+                )
+                success_count += 1
                 
                 
             
-            # except Exception as e:
-            #     failure_count += 1
-            #     # print(f"Failed to send email to {email.email_address}: {str(e)}")
+            except Exception as e:
+                failure_count += 1
+                print(f"Failed to send email to {email.email_address}: {str(e)}")
 
-        send_mass_mail(
-            messages,
-            fail_silently=False
-        )
+        # send_mass_mail(
+        #     messages,
+        #     fail_silently=False
+        # )
 
         return Response({
             "message": "Emails sent successfully!",
