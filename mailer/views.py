@@ -414,43 +414,24 @@ class SendEmailsView(APIView):
         failure_count = 0
 
 
-        messages = []
-        # Iterate through the emails and send them
+        # messages = []
+        
+        if email_template == '1':
+            from_email = 'autosad-temp-email.html'
+        elif email_template == '2':
+                from_email = 'XCV_AI.html'
+                    
+        
         for email in emails:
-            # context = {
-            #         'name': email.name,
-            #         'message': custom_message,
-            #     }
-            # if email_template == 1:
-            #     html_content = render_to_string('autosad-temp-email.html', context)
-            # elif email_template == 2:
-            #     html_content = render_to_string('XCV_AI.html', context)
-            
-            # message = (
-            #     "Welcome to AUTOSAD Get Certified",
-            #     "",
-            #     settings.EMAIL_HOST_USER,
-            #     [email],
-            #     html_message = html_content
-            # )
-            # messages.append(message)
             
             try:
-                
-                
                 context = {
                     'name': email.name,
                     'message': custom_message,
                 }
                 
-                html_content = ""
+                html_content = render_to_string(from_email, context)
                 
-                if email_template == 1:
-                    html_content = render_to_string('autosad-temp-email.html', context)
-                elif email_template == 2:
-                    html_content = render_to_string('XCV_AI.html', context)
-                
-                # html_content = render_to_string('autosad-temp-email.html', context) # context not added because there are not context variables in the html template
                 
                 send_mail(
                     subject='Welcome to AUTOSAD Get Certified',
@@ -461,8 +442,6 @@ class SendEmailsView(APIView):
                 )
                 success_count += 1
                 
-                
-            
             except Exception as e:
                 failure_count += 1
                 print(f"Failed to send email to {email.email_address}: {str(e)}")

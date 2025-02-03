@@ -153,5 +153,5 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")  # Be cautious with sensitiv
 
 
 # EMAIL_HOST_PASSWORD=18Wynf@rdautosad
-EMAIL_HOST_USER='info@autosad.ai'
+# EMAIL_HOST_USER='info@autosad.ai'
 # EMAIL_HOST=smtp.office365.com
