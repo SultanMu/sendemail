@@ -11,7 +11,7 @@ from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample, OpenApiRequest
 from drf_spectacular.types import OpenApiTypes
 from .models import Email, Campaign
 from .serializers import EmailSerializer, CampaignSerializer
@@ -413,43 +413,46 @@ class SendEmailsView(APIView):
         success_count = 0
         failure_count = 0
 
-
-        # messages = []
-        
         if email_template == '1':
             from_email = 'autosad-temp-email.html'
+            subject = 'Welcome to AUTOSAD Get Certified'
         elif email_template == '2':
-                from_email = 'XCV_AI.html'
-                    
-        
-        for email in emails:
-            
+            from_email = 'XCV_AI.html'
+            subject = 'Welcome onboard to XCV AI'
+                
+        for email in emails:       
             try:
                 context = {
-                    'name': email.name,
+                    'name': email.name,        
                     'message': custom_message,
-                }
-                
+                }        
+                        
                 html_content = render_to_string(from_email, context)
                 
-                
                 send_mail(
-                    subject='Welcome to AUTOSAD Get Certified',
+                    subject=subject,
                     message='',
                     from_email='info@autosad.ai',
                     recipient_list=[email.email_address],
                     html_message=html_content
                 )
                 success_count += 1
-                
+                        
             except Exception as e:
                 failure_count += 1
-                print(f"Failed to send email to {email.email_address}: {str(e)}")
-
-        # send_mass_mail(
-        #     messages,
-        #     fail_silently=False
-        # )
+                print(f"Failed to send email to {email.email_address}: {str(e)}")        
+                    
+        context = {'name': email.name, 'message': custom_message}
+        html_content = render_to_string(from_email, context)
+        email_msg = mail.EmailMessage(
+            subject,
+            html_content,
+            'info@autosad.ai',
+            [email.email_address],
+            connection=connection,  # Reuse connection here
+        )
+        email_msg.content_subtype = 'html'
+        email_msg.send()
 
         return Response({
             "message": "Emails sent successfully!",
@@ -537,3 +540,67 @@ class ListEmailView(APIView):
 
 # def intro(request):
 #     return HttpResponse("Welcome to this django app.")
+
+class UpdateCampaignView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("campaign_id", type=int, location="query", required=True, description="ID of the campaign to update."),
+            OpenApiParameter("campaign_name", type=str, location="query", required=True, description="New Campaign Name")
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Campaign name updated successfully.",
+                examples={
+                    "application/json": {
+                        "campaign_id": 1,
+                        "campaign_name": "Updated Campaign Name",
+                        "created_at": "2025-01-27T10:00:00Z",
+                        "updated_at": "2025-01-27T12:00:00Z",
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid request or missing campaign ID.",
+                examples={
+                    "application/json": {"error": "Invalid or missing campaign ID."}
+                }
+            ),
+            404: OpenApiResponse(
+                description="Campaign not found.",
+                examples={
+                    "application/json": {"error": "Campaign not found."}
+                }
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={
+                    "application/json": {"error": "Internal server error."}
+                }
+            ),
+        },
+        description="Update the name of a specific campaign in the database.",
+    )
+    def post(self, request):
+        campaign_id = request.query_params.get("campaign_id")
+        updated_campaign_name = request.query_params.get("campaign_name")
+        
+        if not campaign_id or not updated_campaign_name:
+            return Response({"error": "Campaign ID and new campaign name are required."}, status=400)
+        
+        try:
+            campaign = Campaign.objects.get(campaign_id=campaign_id)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found."}, status=404)
+        
+        try:
+            campaign.campaign_name = updated_campaign_name
+            campaign.save()
+            
+            return Response({
+                "campaign_id": campaign.campaign_id,
+                "campaign_name": campaign.campaign_name,
+                "created_at": campaign.created_at,
+                "updated_at": campaign.updated_at,
+            }, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
