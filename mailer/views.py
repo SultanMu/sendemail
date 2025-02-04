@@ -442,17 +442,20 @@ class SendEmailsView(APIView):
                 failure_count += 1
                 print(f"Failed to send email to {email.email_address}: {str(e)}")        
                     
-        context = {'name': email.name, 'message': custom_message}
-        html_content = render_to_string(from_email, context)
-        email_msg = mail.EmailMessage(
-            subject,
-            html_content,
-            'info@autosad.ai',
-            [email.email_address],
-            connection=connection,  # Reuse connection here
-        )
-        email_msg.content_subtype = 'html'
-        email_msg.send()
+                    
+        # for later purpose.
+
+        # context = {'name': email.name, 'message': custom_message}
+        # html_content = render_to_string(from_email, context)
+        # email_msg = email.EmailMessage(
+        #     subject,
+        #     html_content,
+        #     'info@autosad.ai',
+        #     [email.email_address],
+        #     connection=connection,  # Reuse connection here
+        # )
+        # email_msg.content_subtype = 'html'
+        # email_msg.send()
 
         return Response({
             "message": "Emails sent successfully!",
@@ -532,14 +535,6 @@ class ListEmailView(APIView):
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-       
-
-# def home(request):
-#     template = loader.get_template('autosad-email-template-new.html')
-#     return HttpResponse(template.render())
-
-# def intro(request):
-#     return HttpResponse("Welcome to this django app.")
 
 class UpdateCampaignView(APIView):
     @extend_schema(
@@ -604,3 +599,70 @@ class UpdateCampaignView(APIView):
             }, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+        
+class DeleteCampaignView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("campaign_id", type=int, location="query", required=False, description="ID of the campaign to delete.")
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Campaign deleted successfully.",
+                examples={
+                    "application/json": {
+                        "message": "Campaign and associated emails deleted successfully.",
+                        "campaign_id": 1,
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid request or missing campaign ID.",
+                examples={
+                    "application/json": {"error": "Invalid or missing campaign ID."}
+                }
+            ),
+            404: OpenApiResponse(
+                description="Campaign not found.",
+                examples={
+                    "application/json": {"error": "Campaign not found."}
+                }
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={
+                    "application/json": {"error": "Internal server error."}
+                }
+            ),
+        },
+        description="Delete a specific campaign and all its associated emails from the database.",
+    )
+    
+    def post(self, request):
+            campaign_id = request.query_params.get('campaign_id')
+            
+            if not campaign_id:
+                return Response({"error": "Campaign ID is required."}, status=400)
+            
+            try:
+                campaign = Campaign.objects.get(campaign_id=campaign_id)
+            except Campaign.DoesNotExist:
+                return Response({"error": "Campaign not found."}, status=404)
+
+            try:
+                campaign = Campaign.objects.get(campaign_id=campaign_id)
+            except Campaign.DoesNotExist:
+                return Response(
+                    {"error": "Campaign not found."}, 
+                    status=404
+                )
+                
+            try:
+                campaign.delete()
+
+                return Response({
+                    "message": "Campaign and associated emails deleted successfully.",
+                    "campaign_id": campaign_id
+                }, status=200)
+
+            except Exception as e:
+                return Response({"error": str(e)}, status=500)
