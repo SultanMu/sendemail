@@ -666,3 +666,80 @@ class DeleteCampaignView(APIView):
 
             except Exception as e:
                 return Response({"error": str(e)}, status=500)
+            
+class DeleteEmailView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("email_add", type=str, location="query", required=False, description="Email address from the database to delete."),
+            OpenApiParameter("campaign_id", type=int, location="query", required=True, description="Campaign ID of the campagain to delete.")
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Email address deleted successfully.",
+                examples={
+                    "application/json": {
+                        "Message": "Campaign and associated emails deleted successfully.",
+                        "Email Address": "sample@mail.com",
+                        "Campaign ID": "1"
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid request or missing email address.",
+            ),
+            404: OpenApiResponse(
+                description="Email address not found.",
+                examples={
+                    "application/json": {"error": "Email Database empty or not found."}
+                }
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={
+                    "application/json": {"error": "Internal server error."}
+                }
+            ),
+        },
+        description="Delete an email address and all its associated ID, campaign_id and other data.",
+    )
+    
+    def post(self, request): 
+        email_add = request.query_params.get('email_add')
+        campaign_id = request.query_params.get('campaign_id')
+        
+        if not email_add:
+            return Response({"error": "Email address is required."}, status=400)
+        
+        if not campaign_id:
+            return Response({"error": "Campaign ID is required."}, status=400)
+        
+        # try:
+        #     email = Email.objects.get(email_address=email_add)
+        # except Email.DoesNotExist:
+        #     return Response({"error": "Email Database empty or not found."}, status=404)
+        
+        # try:
+        #     campaign_id = Email.objects.get(campaign_id=campaign_id)
+        # except Email.DoesNotExist:
+        #     return Response(
+        #         {"error": "Campaign ID not found."}, 
+        #         status=404
+        #     )  
+
+        try:
+            email = Email.objects.get(email_address=email_add, campaign_id=campaign_id)
+        except Email.DoesNotExist:
+            return Response(
+                {"error": f"Email: [{email_add}] with campaign ID: {campaign_id} not found."}, 
+                status=404
+            )        
+        
+        try:
+            email.delete()
+            return Response({
+                    "Message": "Campaign and associated emails deleted successfully.",
+                    "Email Address": email_add,
+                    "Campaign ID": campaign_id
+                }, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
