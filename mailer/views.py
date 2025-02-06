@@ -222,6 +222,14 @@ class XLSReaderView(APIView):
                         }
                     }
                 ),
+            400: OpenApiResponse(
+                    description="Email already exists in database.",
+                    examples={
+                        "application/json": {
+                            "error": "Error message"
+                        }
+                    }
+                ),
             500: OpenApiResponse(
                     description="Server-side error.",
                     examples={
@@ -285,6 +293,11 @@ class XLSReaderView(APIView):
 
             emails_to_save = []
             invalid_rows = []
+            duplicate_email = []
+            
+            # using a HashSet to query once (O(1)) instead of multiple queries (O(n)) in the loop.
+            # changable in the future
+            existing_emails = set(Email.objects.filter(campaign_id=campaign).values_list("email_address", flat=True))
 
             for row_number, row in enumerate(sheet.iter_rows(min_row=2), start=2):  # Start from the second row
                 name = row[0].value
@@ -295,6 +308,11 @@ class XLSReaderView(APIView):
                     invalid_rows.append({"row": row_number, "error": "Invalid or missing email address."})
                     continue
                 
+                 # Skip if email already exists
+                if recipient_email in existing_emails:
+                    duplicate_email.append(recipient_email)
+                    continue  # skips the email if its already there :)
+
                 # Prepare the data for bulk create
                 emails_to_save.append(
                     Email(
@@ -313,6 +331,16 @@ class XLSReaderView(APIView):
                     {
                         "message": f"Emails saved successfully, but some rows were invalid.",
                         "invalid_rows": invalid_rows,
+                    },
+                    status=201,
+                )
+            
+            if len(duplicate_email) != 0:
+                return Response(
+                    {
+                        "message": f"Emails saved successfully, but some emails already exists in database under campaign ID {campaign_id}",
+                        "duplicate email count": len(duplicate_email),
+                        "duplicate emails": duplicate_email
                     },
                     status=201,
                 )
@@ -721,7 +749,7 @@ class DeleteEmailView(APIView):
         # try:
         #     campaign_id = Email.objects.get(campaign_id=campaign_id)
         # except Email.DoesNotExist:
-        #     return Response(
+        #     return Response( 
         #         {"error": "Campaign ID not found."}, 
         #         status=404
         #     )  
@@ -741,5 +769,74 @@ class DeleteEmailView(APIView):
                     "Email Address": email_add,
                     "Campaign ID": campaign_id
                 }, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class UpdateEmailView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("campaign_id", type=int, location="query", required=True, description="ID of the campaign to update."),
+            OpenApiParameter("email_id", type=str, location="query", required=True, description="ID of email to update."),
+            OpenApiParameter("email_add", type=str, location="query", required=True, description="New email address to update"),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description="Email address updated successfully.",
+                examples={
+                    "application/json": {
+                        "campaign_id": 1,
+                        "email_id": "6",
+                        "New email address": "new_mail@mail.com",
+                        "updated_at": "2025-01-27T12:00:00Z",
+                    }
+                }
+            ),
+            400: OpenApiResponse(
+                description="Invalid request or missing parameters.",
+                examples={
+                    "application/json": {"error": "Campaign ID and email ID are required."}
+                }
+            ),
+            404: OpenApiResponse(
+                description="Email not found.",
+                examples={
+                    "application/json": {"error": "Email not found."}
+                }
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={
+                    "application/json": {"error": "Internal server error."}
+                }
+            ),
+        },
+        description="Update the email address for a specific campaign in the database.",
+    )
+    def post(self, request):
+        campaign_id = request.query_params.get("campaign_id")
+        email_id = request.query_params.get("email_id")
+        email_add = request.query_params.get("email_add")
+       
+        if not campaign_id or not email_id:
+            return Response({"error": "Campaign ID and email address are required."}, status=400)
+        
+        if not email_add:
+            return Response({"error": "Email address is required."}, status=400)
+       
+        try:
+            email = Email.objects.get(campaign_id=campaign_id, email_id=email_id)
+        except Email.DoesNotExist:
+            return Response({"error": f"Email with ID [{email_id}] not found in Campaign [{campaign_id}]."}, status=404)
+       
+        try:
+            email.email_add = email_add
+            email.save() # saves the email from the ORM
+           
+            return Response({
+                "campaign_id": 1,
+                "email_id": "6",
+                "New email address": "new_mail@mail.com",
+                "updated_at": "2025-01-27T12:00:00Z",
+            }, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
