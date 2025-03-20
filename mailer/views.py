@@ -358,7 +358,7 @@ class SendEmailsView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter("campaign_id", type=int, location="query", required=True, description="ID of the campaign to send emails for."),
-            OpenApiParameter("email_template", type=int, location="query", required=True, description="Enter 1 for AutoSAD template or 2 for XCV AI template")
+            OpenApiParameter("email_template", type=int, location="query", required=True, description="Enter 1 for AutoSAD template or 2 for XCV AI template or 3 for AutoSAD.V2 template")
         ],
         request={
             'application/json': {
@@ -441,13 +441,23 @@ class SendEmailsView(APIView):
         success_count = 0
         failure_count = 0
 
-        if email_template == '1':
-            from_email = 'autosad-temp-email.html'
-            subject = 'Welcome to AUTOSAD Get Certified'
-        elif email_template == '2':
-            from_email = 'XCV_AI.html'
-            subject = 'Welcome onboard to XCV AI'
-                
+        try:
+            if email_template == '1':
+                from_email = 'autosad-temp-email.html'
+                subject = 'Welcome to AUTOSAD Get Certified'
+            elif email_template == '2':
+                from_email = 'XCV_AI.html'
+                subject = 'Welcome onboard to XCV AI'
+            elif email_template == '3':
+                from_email = 'autosad-temp-email2.html'
+                subject = 'Welcome to AUTOSAD Get Certified'
+            elif email_template == '4':
+                from_email = 'autosad-email-temp-3.html'
+                subject = 'Welcome to AUTOSAD Get Certified'
+        
+        except: 
+            return Response({"error": "Error. Template not found."}, status=400)
+
         for email in emails:       
             try:
                 context = {
