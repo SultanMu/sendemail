@@ -358,7 +358,7 @@ class SendEmailsView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter("campaign_id", type=int, location="query", required=True, description="ID of the campaign to send emails for."),
-            OpenApiParameter("email_template", type=int, location="query", required=True, description="Enter 1 for AutoSAD template or 2 for XCV AI template or 3 for AutoSAD.V2 template")
+            OpenApiParameter("email_template", type=int, location="query", required=True, description="Enter 1 for AutoSAD template or 2 for XCV AI template or 3 for AutoSAD.V2 or 4 for AutoSAD.V3 template")
         ],
         request={
             'application/json': {
@@ -410,7 +410,7 @@ class SendEmailsView(APIView):
                 }
             )
         },
-        description="Send emails to all recipients associated with a specific campaign. Optionally provide a custom message."
+        description="Send emails to all recipients associated with a specific campaign. Optionally provide a custom message.\n (Make sure the email list is uploaded for specific campaign ID before sending emails)"
     )
     def post(self, request):
         # Get campaign ID from query parameters
