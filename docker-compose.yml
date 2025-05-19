@@ -1,10 +1,10 @@
 version: '3'
 
 services:
-  web:
+  senemail-backend:
     build:
       context: .
-    container_name: email_sender_service
+    container_name: "senemail-backend"
     command: >
       sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8010"
     volumes:
@@ -30,7 +30,7 @@ services:
       POSTGRES_PASSWORD: password123!
       POSTGRES_DB: postgres
     ports:
-      - "5432:5432"
+      - "5410:5432"
     volumes:
       - postgres_data2:/var/lib/postgresql/data
     restart: always
