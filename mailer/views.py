@@ -477,7 +477,7 @@ class SendEmailsView(APIView):
                 subject = "Welcome to AUTOSAD Get Certified"
             elif email_template == "4":
                 from_email = "autosad-email-temp-3.html"
-                subject = "Welcome to AUTOSAD Get Certified"
+                subject = "Welcome to AUTOSAD"
 
         except:
             return Response({"error": "Error. Template not found."}, status=400)
