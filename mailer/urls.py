@@ -13,7 +13,6 @@ urlpatterns = [
     path("list-emails/", ListEmailView.as_view(), name="email_list"),
     path("upload-xls/", XLSReaderView.as_view(), name="upload_xls"),
     path("send-emails/", SendEmailsView.as_view(), name="send_emails"),
-    path("send-emails-test/", SendEmailsViewTest.as_view(), name="send_emails_test"),
     path("delete-email", DeleteEmailView.as_view(), name="delete_email"),
     path("unsubscribe/", UnsubscribeView.as_view(), name="unsubscribe_form"),
     path("unsubscribe/process/", UnsubscribeView.as_view(), name="unsubscribe_process"),
