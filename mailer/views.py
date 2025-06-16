@@ -1,4 +1,5 @@
 import openpyxl
+
 from openpyxl.utils.exceptions import InvalidFileException
 from django.core.mail import send_mail
 
@@ -386,6 +387,12 @@ class SendEmailsView(APIView):
                 location="query",
                 required=True,
                 description="Enter 1 for AutoSAD template or 2 for XCV AI template or 3 for AutoSAD.V2 or 4 for AutoSAD.V3 template",
+                enum=[
+                    "AutoSAD template",
+                    "XCV AI Template",
+                    "AutoSAD.V2 template",
+                    "AutoSAD V3 template",
+                ],
             ),
         ],
         request={
@@ -529,6 +536,176 @@ class SendEmailsView(APIView):
             },
             status=200 if failure_count == 0 else 207,
         )  # 207: Multi-Status for partial success
+
+
+class SendEmailsViewTest(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "campaign_id",
+                type=int,
+                location="query",
+                required=True,
+                description="ID of the campaign to send emails for.",
+            ),
+            OpenApiParameter(
+                "email_template",
+                type=int,
+                location="query",
+                required=True,
+                description="Select an email template:",
+                enum=[
+                    "AutoSAD template",
+                    "XCV AI Template",
+                    "AutoSAD.V2 template",
+                    "AutoSAD V3 template",
+                ],
+            ),
+        ],
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "Custom message to send in the email (optional). If not provided, the default message will be used.",
+                    }
+                },
+                "example": {
+                    "message": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.",
+                },
+            }
+        },
+        responses={
+            200: OpenApiResponse(
+                description="Emails processed successfully.",
+                examples={
+                    "application/json": {
+                        "message": "Emails processed.",
+                        "details": {"sent": 10, "failed": 2},
+                        "custom_message_used": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look lovely to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.",
+                    }
+                },
+            ),
+            400: OpenApiResponse(
+                description="Invalid or missing parameters.",
+                examples={
+                    "application/json": {"error": "Invalid or missing campaign ID."}
+                },
+            ),
+            404: OpenApiResponse(
+                description="No emails found for the given campaign.",
+                examples={
+                    "application/json": {
+                        "error": "No emails found for the given campaign."
+                    }
+                },
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={"application/json": {"error": "Internal server error."}},
+            ),
+        },
+        description="""Send emails to all recipients associated with a specific campaign. Optionally provide a custom message.\n (Make sure the email list is uploaded for specific campaign ID before sending emails)""",
+    )
+    def post(self, request):
+        # Get campaign ID and email template from query parameters
+        campaign_id = request.query_params.get("campaign_id")
+        email_template = request.query_params.get("email_template")
+
+        # Validate required parameters
+        if not campaign_id:
+            return Response({"error": "Campaign ID is required."}, status=400)
+        if not email_template:
+            return Response({"error": "Email Template is required."}, status=400)
+
+        # Convert email_template to int for comparison
+        try:
+            email_template = int(email_template)
+        except ValueError:
+            return Response({"error": "Email Template must be an integer."}, status=400)
+
+        try:
+            # Replace 'Campaign' with your actual Campaign model
+            campaign = Campaign.objects.get(campaign_id=campaign_id)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found."}, status=404)
+
+        # Replace 'Email' with your actual Email model
+        emails = Email.objects.filter(campaign_id=campaign)
+
+        if not emails.exists():
+            return Response(
+                {"error": "No emails found for the given campaign."}, status=404
+            )
+
+        # Get the custom message from the request body, or use the default
+        custom_message = request.data.get("message")
+        if not custom_message:
+            custom_message = "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
+
+        success_count = 0
+        failure_count = 0
+        from_email_template_path = ""
+        subject = ""
+
+        # Determine the email template path and subject based on the selected email_template ID
+        if email_template == 1:
+            from_email_template_path = "autosad-temp-email.html"
+            subject = "Welcome to AUTOSAD Get Certified"
+        elif email_template == 2:
+            from_email_template_path = "XCV_AI.html"
+            subject = "Welcome onboard to XCV AI"
+        elif email_template == 3:
+            from_email_template_path = "autosad-temp-email2.html"
+            subject = "Welcome to AUTOSAD Get Certified"
+        elif email_template == 4:
+            from_email_template_path = "autosad-email-temp-3.html"
+            subject = "Welcome to AUTOSAD Get Certified"
+        else:
+            return Response(
+                {"error": "Error. Invalid email template selected."}, status=400
+            )
+
+        # Iterate through each email and send
+        for email in emails:
+            try:
+                context = {
+                    "name": email.name,  # Assuming 'name' attribute exists on your Email model
+                    "message": custom_message,
+                }
+
+                html_content = render_to_string(from_email_template_path, context)
+
+                send_mail(
+                    subject=subject,
+                    message="",  # Plain text message is empty, as we send HTML content
+                    from_email="info@autosad.ai",
+                    recipient_list=[
+                        email.email_address
+                    ],  # Assuming 'email_address' attribute exists on your Email model
+                    html_message=html_content,
+                )
+                success_count += 1
+            except Exception as e:
+                failure_count += 1
+                # Log the error for debugging purposes
+                print(f"Failed to send email to {email.email_address}: {str(e)}")
+
+        # Return appropriate response based on email sending results
+        return Response(
+            {
+                "message": "Emails processed successfully!",
+                "details": {
+                    "sent": success_count,
+                    "failed": failure_count,
+                },
+                "custom_message_used": custom_message,
+            },
+            status=200
+            if failure_count == 0
+            else 207,  # 207: Multi-Status for partial success
+        )
 
 
 class ListEmailView(APIView):
@@ -942,3 +1119,120 @@ class UpdateEmailView(APIView):
             )
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+
+class UnsubscribeView(APIView):
+    @extend_schema(
+        description="GET: Displays a form for users to enter their email to unsubscribe. "
+        "POST: Processes the submitted email address to unsubscribe from the mailing list.",
+        # request=OpenApiRequest(
+        #     media_type="application/json",
+        #     examples=[
+        #         OpenApiExample(
+        #             "Unsubscribe Request",
+        #             value={"email_address": "user@example.com"},
+        #             request_only=True,
+        #         ),
+        #     ],
+        #     schema={
+        #         "type": "object",
+        #         "properties": {"email_address": {"type": "string"}},
+        #     },
+        # ),
+        responses={
+            200: OpenApiResponse(
+                description="Unsubscribe form loaded or unsubscription successful.",
+                examples={
+                    "GET_FORM": OpenApiExample(
+                        "HTML Form Response",
+                        value="<!DOCTYPE html>...",  # Represents the HTML of the form
+                        media_type="text/html",
+                        response_only=True,
+                    ),
+                    "POST_SUCCESS": OpenApiExample(
+                        "JSON Success Response",
+                        value={"message": "You have been successfully unsubscribed."},
+                        response_only=True,
+                    ),
+                },
+            ),
+            400: OpenApiResponse(
+                description="Invalid email address or other error.",
+                examples={"application/json": {"error": "Invalid email address."}},
+            ),
+            404: OpenApiResponse(
+                description="Email address not found.",
+                examples={
+                    "application/json": {
+                        "error": "Email address not found in our records."
+                    }
+                },
+            ),
+            500: OpenApiResponse(
+                description="Internal server error.",
+                examples={
+                    "application/json": {
+                        "error": "An error occurred during unsubscription."
+                    }
+                },
+            ),
+        },
+    )
+    def get(self, request):
+        return render(
+            request, "unsubscribe_form.html", {"message": None, "success": False}
+        )
+
+    def post(self, request):
+        email_address = request.data.get("email_address")
+
+        if not email_address:
+            return render(
+                request,
+                "unsubscribe_form.html",
+                {"message": "Please provide an email address.", "success": False},
+                status=400,
+            )
+
+        try:
+            emails_to_unsubscribe = Email.objects.filter(
+                email_address=email_address, is_subscribed=True
+            )
+
+            if not emails_to_unsubscribe.exists():
+                return render(
+                    request,
+                    "unsubscribe_form.html",
+                    {
+                        "message": f"Email '{email_address}' not found or already unsubscribed.",
+                        "success": False,
+                    },
+                    status=404,
+                )
+
+            for email_entry in emails_to_unsubscribe:
+                email_entry.is_subscribed = False
+                email_entry.save()
+
+            return render(
+                request,
+                "unsubscribe_form.html",
+                {
+                    "message": "You have been successfully unsubscribed from all associated lists.",
+                    "success": True,
+                },
+                status=200,
+            )
+
+        except Exception as e:
+            # Log the error for debugging purposes
+            print(f"Error unsubscribing {email_address}: {e}")
+            return render(
+                request,
+                "unsubscribe_form.html",
+                {
+                    "message": f"An error occurred: {e}. Please try again later.",
+                    "success": False,
+                },
+                status=500,
+            )
