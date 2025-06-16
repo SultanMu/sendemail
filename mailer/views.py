@@ -386,6 +386,7 @@ class SendEmailsView(APIView):
                 location="query",
                 required=True,
                 description="Enter 1 for AutoSAD template or 2 for XCV AI template or 3 for AutoSAD.V2 or 4 for AutoSAD.V3 template",
+                enum=["AutoSAD v1", "AutoSAD v2", "AutoSAD v3", "XCV AI"],
             ),
         ],
         request={
