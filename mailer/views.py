@@ -1,5 +1,4 @@
 import openpyxl
-
 from openpyxl.utils.exceptions import InvalidFileException
 from django.core.mail import send_mail
 
@@ -387,12 +386,6 @@ class SendEmailsView(APIView):
                 location="query",
                 required=True,
                 description="Enter 1 for AutoSAD template or 2 for XCV AI template or 3 for AutoSAD.V2 or 4 for AutoSAD.V3 template",
-                enum=[
-                    "AutoSAD template",
-                    "XCV AI Template",
-                    "AutoSAD.V2 template",
-                    "AutoSAD V3 template",
-                ],
             ),
         ],
         request={
@@ -949,120 +942,3 @@ class UpdateEmailView(APIView):
             )
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-
-
-class UnsubscribeView(APIView):
-    @extend_schema(
-        description="GET: Displays a form for users to enter their email to unsubscribe. "
-        "POST: Processes the submitted email address to unsubscribe from the mailing list.",
-        # request=OpenApiRequest(
-        #     media_type="application/json",
-        #     examples=[
-        #         OpenApiExample(
-        #             "Unsubscribe Request",
-        #             value={"email_address": "user@example.com"},
-        #             request_only=True,
-        #         ),
-        #     ],
-        #     schema={
-        #         "type": "object",
-        #         "properties": {"email_address": {"type": "string"}},
-        #     },
-        # ),
-        responses={
-            200: OpenApiResponse(
-                description="Unsubscribe form loaded or unsubscription successful.",
-                examples={
-                    "GET_FORM": OpenApiExample(
-                        "HTML Form Response",
-                        value="<!DOCTYPE html>...",  # Represents the HTML of the form
-                        media_type="text/html",
-                        response_only=True,
-                    ),
-                    "POST_SUCCESS": OpenApiExample(
-                        "JSON Success Response",
-                        value={"message": "You have been successfully unsubscribed."},
-                        response_only=True,
-                    ),
-                },
-            ),
-            400: OpenApiResponse(
-                description="Invalid email address or other error.",
-                examples={"application/json": {"error": "Invalid email address."}},
-            ),
-            404: OpenApiResponse(
-                description="Email address not found.",
-                examples={
-                    "application/json": {
-                        "error": "Email address not found in our records."
-                    }
-                },
-            ),
-            500: OpenApiResponse(
-                description="Internal server error.",
-                examples={
-                    "application/json": {
-                        "error": "An error occurred during unsubscription."
-                    }
-                },
-            ),
-        },
-    )
-    def get(self, request):
-        return render(
-            request, "unsubscribe_form.html", {"message": None, "success": False}
-        )
-
-    def post(self, request):
-        email_address = request.data.get("email_address")
-
-        if not email_address:
-            return render(
-                request,
-                "unsubscribe_form.html",
-                {"message": "Please provide an email address.", "success": False},
-                status=400,
-            )
-
-        try:
-            emails_to_unsubscribe = Email.objects.filter(
-                email_address=email_address, is_subscribed=True
-            )
-
-            if not emails_to_unsubscribe.exists():
-                return render(
-                    request,
-                    "unsubscribe_form.html",
-                    {
-                        "message": f"Email '{email_address}' not found or already unsubscribed.",
-                        "success": False,
-                    },
-                    status=404,
-                )
-
-            for email_entry in emails_to_unsubscribe:
-                email_entry.is_subscribed = False
-                email_entry.save()
-
-            return render(
-                request,
-                "unsubscribe_form.html",
-                {
-                    "message": "You have been successfully unsubscribed from all associated lists.",
-                    "success": True,
-                },
-                status=200,
-            )
-
-        except Exception as e:
-            # Log the error for debugging purposes
-            print(f"Error unsubscribing {email_address}: {e}")
-            return render(
-                request,
-                "unsubscribe_form.html",
-                {
-                    "message": f"An error occurred: {e}. Please try again later.",
-                    "success": False,
-                },
-                status=500,
-            )
