@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { campaignAPI } from '../services/api';
 
 const CampaignManager = () => {
@@ -8,11 +8,7 @@ const CampaignManager = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  useEffect(() => {
-    loadCampaigns();
-  }, [loadCampaigns]);
-
-  const loadCampaigns = async () => {
+  const loadCampaigns = useCallback(async () => {
     try {
       setLoading(true);
       const response = await campaignAPI.list();
@@ -22,7 +18,11 @@ const CampaignManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCampaigns();
+  }, [loadCampaigns]);
 
   const createCampaign = async (e) => {
     e.preventDefault();
