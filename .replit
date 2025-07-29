@@ -1,4 +1,4 @@
-modules = ["web", "python-3.12"]
+modules = ["nodejs-20", "python-3.12", "web"]
 run = "python3 manage.py runserver 0.0.0.0:3000"
 
 [nix]
@@ -23,6 +23,15 @@ args = "python manage.py migrate"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python manage.py runserver 0.0.0.0:5000"
+
+[[workflows.workflow]]
+name = "Run React Frontend"
+author = 41254074
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm start"
 
 [[ports]]
 localPort = 5000
