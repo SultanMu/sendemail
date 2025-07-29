@@ -25,10 +25,191 @@ from .models import Email, Campaign
 from .serializers import EmailSerializer, CampaignSerializer
 from django.conf import settings
 
-# 1) view for listing existing campaigns - list it with id, name
-# 2) view for adding new campaigns - user will provide campaign name and model will be created
-# 3) view for editing existing campaigns - user will provide campaign name and model will be updated - later (optional)
-# 4) view for deleting existing campaigns - user will provide campaign name and model will be deleted - later (optional)
+
+class CampaignCreateView(APIView):
+    @extend_schema(
+        request=CampaignSerializer,
+        responses={201: CampaignSerializer, 400: OpenApiResponse(description="Bad Request")},
+        description="Create a new campaign",
+    )
+    def post(self, request):
+        try:
+            serializer = CampaignSerializer(data=request.data)
+            if serializer.is_valid():
+                campaign = serializer.save()
+                return Response(serializer.data, status=201)
+            return Response(serializer.errors, status=400)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class UpdateCampaignView(APIView):
+    def post(self, request):
+        try:
+            campaign_id = request.GET.get('campaign_id')
+            campaign_name = request.GET.get('campaign_name')
+            
+            if not campaign_id or not campaign_name:
+                return Response({"error": "campaign_id and campaign_name are required"}, status=400)
+            
+            campaign = Campaign.objects.get(id=campaign_id)
+            campaign.name = campaign_name
+            campaign.save()
+            
+            serializer = CampaignSerializer(campaign)
+            return Response(serializer.data, status=200)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class DeleteCampaignView(APIView):
+    def post(self, request):
+        try:
+            campaign_id = request.GET.get('campaign_id')
+            
+            if not campaign_id:
+                return Response({"error": "campaign_id is required"}, status=400)
+            
+            campaign = Campaign.objects.get(id=campaign_id)
+            campaign.delete()
+            
+            return Response({"message": "Campaign deleted successfully"}, status=200)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class ListEmailView(APIView):
+    def get(self, request):
+        try:
+            campaign_id = request.GET.get('campaign_id')
+            
+            if not campaign_id:
+                return Response({"error": "campaign_id is required"}, status=400)
+            
+            emails = Email.objects.filter(campaign_id=campaign_id)
+            serializer = EmailSerializer(emails, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class XLSReaderView(APIView):
+    parser_classes = [MultiPartParser]
+    
+    def post(self, request):
+        try:
+            campaign_id = request.GET.get('campaign_id')
+            file = request.FILES.get('file')
+            
+            if not campaign_id or not file:
+                return Response({"error": "campaign_id and file are required"}, status=400)
+            
+            campaign = Campaign.objects.get(id=campaign_id)
+            
+            # Process Excel file
+            workbook = openpyxl.load_workbook(file)
+            sheet = workbook.active
+            
+            emails_created = 0
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                if row[0]:  # Assuming email is in first column
+                    email_address = str(row[0]).strip()
+                    name = str(row[1]).strip() if len(row) > 1 and row[1] else ""
+                    
+                    Email.objects.get_or_create(
+                        email_address=email_address,
+                        campaign=campaign,
+                        defaults={'name': name}
+                    )
+                    emails_created += 1
+            
+            return Response({"message": f"{emails_created} emails processed"}, status=200)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class SendEmailsView(APIView):
+    def post(self, request):
+        try:
+            campaign_id = request.GET.get('campaign_id')
+            email_template = request.GET.get('email_template', 'default')
+            
+            if not campaign_id:
+                return Response({"error": "campaign_id is required"}, status=400)
+            
+            campaign = Campaign.objects.get(id=campaign_id)
+            emails = Email.objects.filter(campaign=campaign)
+            
+            if not emails.exists():
+                return Response({"error": "No emails found for this campaign"}, status=400)
+            
+            # Send emails logic here
+            sent_count = 0
+            for email in emails:
+                try:
+                    send_mail(
+                        subject=f"Campaign: {campaign.name}",
+                        message=request.data.get('message', 'Default message'),
+                        from_email=settings.EMAIL_HOST_USER,
+                        recipient_list=[email.email_address],
+                        fail_silently=False,
+                    )
+                    sent_count += 1
+                except Exception as e:
+                    continue
+            
+            return Response({"message": f"Sent {sent_count} emails"}, status=200)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class DeleteEmailView(APIView):
+    def post(self, request):
+        try:
+            email_address = request.GET.get('email_add')
+            campaign_id = request.GET.get('campaign_id')
+            
+            if not email_address or not campaign_id:
+                return Response({"error": "email_add and campaign_id are required"}, status=400)
+            
+            email = Email.objects.get(email_address=email_address, campaign_id=campaign_id)
+            email.delete()
+            
+            return Response({"message": "Email deleted successfully"}, status=200)
+        except Email.DoesNotExist:
+            return Response({"error": "Email not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class UpdateEmailView(APIView):
+    def post(self, request):
+        try:
+            email_address = request.GET.get('email_add')
+            campaign_id = request.GET.get('campaign_id')
+            new_name = request.data.get('name', '')
+            
+            if not email_address or not campaign_id:
+                return Response({"error": "email_add and campaign_id are required"}, status=400)
+            
+            email = Email.objects.get(email_address=email_address, campaign_id=campaign_id)
+            email.name = new_name
+            email.save()
+            
+            serializer = EmailSerializer(email)
+            return Response(serializer.data, status=200)
+        except Email.DoesNotExist:
+            return Response({"error": "Email not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
 # 5) view for uploading emails from XLS file - user will provide campaign id and XLS file and model will be created
 # 6) view for listing emails - will list all emails in the database
