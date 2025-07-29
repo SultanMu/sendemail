@@ -1,5 +1,5 @@
 modules = ["nodejs-20", "python-3.12", "web"]
-run = "python3 manage.py runserver 0.0.0.0:3000"
+run = "cd frontend && npm start"
 
 [nix]
 channel = "stable-25_05"
@@ -48,7 +48,7 @@ args = "cd frontend && npm start"
 
 [[ports]]
 localPort = 3000
-externalPort = 3000
+externalPort = 80
 
 [[ports]]
 localPort = 3001
@@ -56,4 +56,4 @@ externalPort = 3001
 
 [[ports]]
 localPort = 5000
-externalPort = 80
+externalPort = 5000
