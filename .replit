@@ -20,6 +20,19 @@ mode = "sequential"
 task = "shell.exec"
 args = "python manage.py runserver 0.0.0.0:5000"
 
+[[workflows.workflow]]
+name = "Run Full Stack"
+author = 41254074
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py runserver 0.0.0.0:5000"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm start"
+
 [[ports]]
 localPort = 3000
 externalPort = 3000
