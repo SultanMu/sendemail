@@ -45,7 +45,7 @@ const EmailManager = () => {
       setDeleteEmailCampaignId('');
       
       // Refresh email list if campaign ID matches
-      if (listCampaignId == campaignId) {
+      if (listCampaignId === campaignId) {
         loadEmails();
       }
     } catch (error) {

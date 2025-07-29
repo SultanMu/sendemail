@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import CampaignManager from './components/CampaignManager';
 import EmailUploader from './components/EmailUploader';
 import EmailManager from './components/EmailManager';

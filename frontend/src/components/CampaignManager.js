@@ -10,7 +10,7 @@ const CampaignManager = () => {
 
   useEffect(() => {
     loadCampaigns();
-  }, []);
+  }, [loadCampaigns]);
 
   const loadCampaigns = async () => {
     try {
