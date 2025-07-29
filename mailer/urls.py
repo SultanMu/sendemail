@@ -1,7 +1,9 @@
 from django.urls import path
 from .views import *
+from .frontend_views import frontend_dashboard
 
 urlpatterns = [
+    path('', frontend_dashboard, name='dashboard'),
     # path('home/', home, name='home'),
     # path('', intro, name='intro'),
     path('campaigns/', CampaignListView.as_view(), name='campaign_list'),
@@ -13,6 +15,7 @@ urlpatterns = [
     path('list-emails/', ListEmailView.as_view(), name='email_list'),
     path('upload-xls/', XLSReaderView.as_view(), name='upload_xls'),
     path('send-emails/', SendEmailsView.as_view(), name='send_emails'),
-    path('delete-email', DeleteEmailView.as_view(), name='delete_email')
+    path('delete-email', DeleteEmailView.as_view(), name='delete_email'),
+    path('update-email', UpdateEmailView.as_view(), name='update_email'),
     # path('sendemails', send_emails, name='send_emails'),
 ]
