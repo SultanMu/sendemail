@@ -3,7 +3,7 @@ from .views import *
 from .frontend_views import frontend_dashboard
 
 urlpatterns = [
-    path('', frontend_dashboard, name='dashboard'),
+    # API endpoints
     # path('home/', home, name='home'),
     # path('', intro, name='intro'),
     path('campaigns/', CampaignListView.as_view(), name='campaign_list'),
@@ -18,4 +18,5 @@ urlpatterns = [
     path('delete-email', DeleteEmailView.as_view(), name='delete_email'),
     path('update-email', UpdateEmailView.as_view(), name='update_email'),
     # path('sendemails', send_emails, name='send_emails'),
+    path('', frontend_dashboard, name='dashboard'),  # Frontend at root
 ]
