@@ -9,7 +9,7 @@ packages = ["pgadmin4"]
 run = ["sh", "-c", "python3 manage.py runserver 0.0.0.0:3000"]
 
 [workflows]
-runButton = "Run Django Server"
+runButton = "Run React Frontend"
 
 [[workflows.workflow]]
 name = "Run Django Server"
@@ -33,9 +33,26 @@ mode = "sequential"
 task = "shell.exec"
 args = "cd frontend && npm start"
 
+[[workflows.workflow]]
+name = "Run Full Stack"
+author = 41254074
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py runserver 0.0.0.0:5000"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm start"
+
 [[ports]]
 localPort = 3000
 externalPort = 3000
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
 
 [[ports]]
 localPort = 5000
