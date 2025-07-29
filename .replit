@@ -7,3 +7,23 @@ packages = ["pgadmin4"]
 
 [deployment]
 run = ["sh", "-c", "python3 manage.py runserver 0.0.0.0:3000"]
+
+[workflows]
+runButton = "Run Django Server"
+
+[[workflows.workflow]]
+name = "Run Django Server"
+author = 41254074
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py migrate"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py runserver 0.0.0.0:5000"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
