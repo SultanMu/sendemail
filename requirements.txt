@@ -11,3 +11,5 @@ openpyxl==3.1.5
 sqlparse==0.5.3
 # tzdata==2024.2
 dj-database-url
+dj-database-url
+dj-database-url
