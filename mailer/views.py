@@ -684,7 +684,7 @@ class SendEmailsView(APIView):
                     if custom_html_content.endswith('.html'):
                         # It's a filename, use render_to_string like built-in templates
                         context = {
-                            "name": email.name,
+                            "name": email.name or "Valued Customer",
                             "message": custom_message,
                         }
                         html_content = render_to_string(custom_html_content, context)
@@ -693,11 +693,13 @@ class SendEmailsView(APIView):
                         html_content = custom_html_content
                         if email.name:
                             html_content = html_content.replace('{{name}}', email.name)
-                            html_content = html_content.replace('{{message}}', custom_message)
+                        else:
+                            html_content = html_content.replace('{{name}}', 'Valued Customer')
+                        html_content = html_content.replace('{{message}}', custom_message)
                 else:
                     # For built-in templates, use render_to_string
                     context = {
-                        "name": email.name,
+                        "name": email.name or "Valued Customer",
                         "message": custom_message,
                     }
                     html_content = render_to_string(template_file, context)
@@ -1246,7 +1248,7 @@ class EmailTemplatePreviewView(APIView):
                     
                     # Load template content from file if it's a filename, otherwise use stored content
                     if custom_template.html_content.endswith('.html'):
-                        # It's a filename, load from file
+                        # It's a filename, load from file using render_to_string
                         context = {
                             "name": "John Doe",
                             "message": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
@@ -1348,6 +1350,7 @@ class EmailTemplateCreateView(APIView):
         try:
             serializer = EmailTemplateSerializer(data=request.data)
             if serializer.is_valid():
+                # Save the template to get the ID
                 template = serializer.save()
                 
                 # Save the HTML content as a file in the templates folder
@@ -1355,10 +1358,13 @@ class EmailTemplateCreateView(APIView):
                 template_filename = f"custom_template_{template.template_id}.html"
                 template_path = os.path.join(settings.BASE_DIR, 'mailer', 'templates', template_filename)
                 
+                # Ensure the templates directory exists
+                os.makedirs(os.path.dirname(template_path), exist_ok=True)
+                
                 with open(template_path, 'w', encoding='utf-8') as f:
                     f.write(template.html_content)
                 
-                # Update the template record to store the filename
+                # Update the template record to store the filename instead of content
                 template.html_content = template_filename
                 template.save()
                 

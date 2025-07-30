@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-const API_BASE = '/email';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? '/email'  // In production, use relative path
+  : 'http://localhost:5000/email';  // In development, use full URL
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
