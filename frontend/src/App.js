@@ -1,7 +1,7 @@
-
 import React from 'react';
 import UnifiedCampaignManager from './components/UnifiedCampaignManager';
 import EmailSender from './components/EmailSender';
+import EmailTemplateBuilder from './components/EmailTemplateBuilder';
 
 function App() {
   return (
@@ -10,9 +10,10 @@ function App() {
         <h1 style={styles.title}>Email Campaign Manager</h1>
         <p style={styles.subtitle}>Modern unified campaign management and email sending</p>
       </header>
-      
+
       <UnifiedCampaignManager />
       <EmailSender />
+      <EmailTemplateBuilder />
     </div>
   );
 }
