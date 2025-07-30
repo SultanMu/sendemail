@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use proxy for API communication in Replit
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+// Use relative URLs that will be proxied to the Django backend
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -6,8 +6,8 @@ from mailer.frontend_views import frontend_dashboard
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('email/', include('mailer.urls')),  # API endpoints
-    path('', frontend_dashboard, name='frontend'),  # Frontend at root
+    path('api/', include('mailer.urls')),  # API endpoints
+    path('', include('mailer.frontend_urls')), # Frontend routes
 ]
 
 # Serve static files in development
