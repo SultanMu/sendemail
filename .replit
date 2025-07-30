@@ -9,7 +9,7 @@ packages = ["pgadmin4"]
 run = ["sh", "-c", "python3 manage.py runserver 0.0.0.0:3000"]
 
 [workflows]
-runButton = "Complete Fresh Start"
+runButton = "Start Both Servers"
 
 [[workflows.workflow]]
 name = "Run Django Server"
@@ -330,6 +330,19 @@ args = "python manage.py runserver 0.0.0.0:5000 &"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "sleep 8"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm install && HOST=0.0.0.0 PORT=3000 BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true npm start"
+
+[[workflows.workflow]]
+name = "Start Both Servers"
+author = 41254074
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py migrate && python manage.py runserver 0.0.0.0:5000"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
