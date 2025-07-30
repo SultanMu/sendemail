@@ -680,12 +680,20 @@ class SendEmailsView(APIView):
         for email in emails:
             try:
                 if is_custom_template:
-                    # For custom templates, use the stored HTML content directly
-                    # Replace placeholders if they exist
-                    html_content = custom_html_content
-                    if email.name:
-                        html_content = html_content.replace('{{name}}', email.name)
-                        html_content = html_content.replace('{{message}}', custom_message)
+                    # For custom templates, check if it's a filename or direct content
+                    if custom_html_content.endswith('.html'):
+                        # It's a filename, use render_to_string like built-in templates
+                        context = {
+                            "name": email.name,
+                            "message": custom_message,
+                        }
+                        html_content = render_to_string(custom_html_content, context)
+                    else:
+                        # Legacy: stored content directly in database
+                        html_content = custom_html_content
+                        if email.name:
+                            html_content = html_content.replace('{{name}}', email.name)
+                            html_content = html_content.replace('{{message}}', custom_message)
                 else:
                     # For built-in templates, use render_to_string
                     context = {
@@ -1236,10 +1244,19 @@ class EmailTemplatePreviewView(APIView):
                     custom_template = EmailTemplate.objects.get(template_id=template_id_int)
                     print(f"Found custom template: {custom_template.template_name}")</old_str>
                     
-                    # Replace placeholders for preview
-                    html_content = custom_template.html_content
-                    html_content = html_content.replace('{{name}}', 'John Doe')
-                    html_content = html_content.replace('{{message}}', 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')
+                    # Load template content from file if it's a filename, otherwise use stored content
+                    if custom_template.html_content.endswith('.html'):
+                        # It's a filename, load from file
+                        context = {
+                            "name": "John Doe",
+                            "message": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
+                        }
+                        html_content = render_to_string(custom_template.html_content, context)
+                    else:
+                        # Legacy: stored content directly in database
+                        html_content = custom_template.html_content
+                        html_content = html_content.replace('{{name}}', 'John Doe')
+                        html_content = html_content.replace('{{message}}', 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')
                     
                     return Response({
                         "template_name": custom_template.template_name,
@@ -1332,6 +1349,19 @@ class EmailTemplateCreateView(APIView):
             serializer = EmailTemplateSerializer(data=request.data)
             if serializer.is_valid():
                 template = serializer.save()
+                
+                # Save the HTML content as a file in the templates folder
+                import os
+                template_filename = f"custom_template_{template.template_id}.html"
+                template_path = os.path.join(settings.BASE_DIR, 'mailer', 'templates', template_filename)
+                
+                with open(template_path, 'w', encoding='utf-8') as f:
+                    f.write(template.html_content)
+                
+                # Update the template record to store the filename
+                template.html_content = template_filename
+                template.save()
+                
                 return Response(serializer.data, status=201)
             return Response(serializer.errors, status=400)
         except Exception as e:
