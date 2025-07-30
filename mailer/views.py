@@ -927,8 +927,7 @@ class DeleteCampaignView(APIView):
                     "application/json": {"error": "Invalid or missing campaign ID."}
                 },
             ),
-            404:```python
- OpenApiResponse(
+            404: OpenApiResponse(
                 description="Campaign not found.",
                 examples={"application/json": {"error": "Campaign not found."}},
             ),
