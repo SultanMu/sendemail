@@ -6,7 +6,6 @@ const API_BASE_URL = '/email';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-</old_str>
   headers: {
     'Content-Type': 'application/json',
   },
