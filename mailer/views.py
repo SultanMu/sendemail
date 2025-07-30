@@ -1284,24 +1284,14 @@ class EmailTemplateListView(APIView):
             
             # Add custom templates with proper error handling
             try:
-                from django.db import connection
-                # Check if the table exists before querying
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        SELECT COUNT(*) 
-                        FROM information_schema.tables 
-                        WHERE table_name = 'mailer_email_template'
-                    """)
-                    table_exists = cursor.fetchone()[0] > 0
-                
-                if table_exists:
-                    custom_templates = EmailTemplate.objects.all().order_by('-created_at')
-                    for template in custom_templates:
-                        templates.append({
-                            "template_id": str(template.template_id),
-                            "template_name": template.template_name,
-                            "type": "custom"
-                        })
+                # Try to fetch custom templates directly - Django will handle table existence
+                custom_templates = EmailTemplate.objects.all().order_by('-created_at')
+                for template in custom_templates:
+                    templates.append({
+                        "template_id": str(template.template_id),
+                        "template_name": template.template_name,
+                        "type": "custom"
+                    })
                         
             except Exception as db_error:
                 print(f"Error fetching custom templates: {db_error}")
