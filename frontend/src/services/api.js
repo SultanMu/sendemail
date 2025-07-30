@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/email'  // In production, use relative path
-  : 'http://localhost:5000/email';  // In development, use full URL
+// Use the current domain with port 5000 for Replit compatibility
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:5000/email`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
