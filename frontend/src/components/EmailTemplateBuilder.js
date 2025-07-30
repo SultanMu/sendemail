@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { templateAPI } from '../services/api';
 
@@ -37,7 +36,7 @@ const EmailTemplateBuilder = () => {
     try {
       setSaving(true);
       const htmlContent = generateHTML();
-      
+
       await templateAPI.create({
         template_name: templateName,
         subject: subject,
@@ -45,16 +44,16 @@ const EmailTemplateBuilder = () => {
       });
 
       showMessage('Template saved successfully!', 'success');
-      
+
       // Notify other components that a new template was created
       window.dispatchEvent(new CustomEvent('templateCreated'));
-      
+
       // Optionally reset form
       setTemplateName('');
       setSubject('');
       setComponents([]);
       setSelectedComponent(null);
-      
+
     } catch (error) {
       showMessage(error.response?.data?.error || 'Error saving template', 'error');
     } finally {
@@ -149,7 +148,7 @@ const EmailTemplateBuilder = () => {
 
     const rect = canvasRef.current.getBoundingClientRect();
     const y = e.clientY - rect.top;
-    
+
     // Find insertion index based on Y position
     let insertIndex = components.length;
     for (let i = 0; i < components.length; i++) {
@@ -200,7 +199,7 @@ const EmailTemplateBuilder = () => {
   const moveComponent = (componentId, direction) => {
     const index = components.findIndex(comp => comp.id === componentId);
     if (index === -1) return;
-    
+
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= components.length) return;
 
@@ -215,22 +214,22 @@ const EmailTemplateBuilder = () => {
       switch (comp.type) {
         case 'text':
           return `<p style="font-size: ${comp.props.fontSize}; color: ${comp.props.color}; text-align: ${comp.props.textAlign}; font-weight: ${comp.props.fontWeight}; font-family: ${comp.props.fontFamily}; margin: 10px 0;">${comp.props.content}</p>`;
-        
+
         case 'heading':
           return `<h2 style="font-size: ${comp.props.fontSize}; color: ${comp.props.color}; text-align: ${comp.props.textAlign}; font-weight: ${comp.props.fontWeight}; font-family: ${comp.props.fontFamily}; margin: 20px 0;">${comp.props.content}</h2>`;
-        
+
         case 'image':
           return `<div style="text-align: ${comp.props.textAlign}; margin: 10px 0;"><img src="${comp.props.src}" alt="${comp.props.alt}" style="width: ${comp.props.width}; height: ${comp.props.height}; max-width: 100%;" /></div>`;
-        
+
         case 'button':
           return `<div style="text-align: ${comp.props.textAlign}; margin: 20px 0;"><a href="${comp.props.href}" style="display: inline-block; background-color: ${comp.props.backgroundColor}; color: ${comp.props.color}; padding: ${comp.props.padding}; text-decoration: none; border-radius: ${comp.props.borderRadius};">${comp.props.text}</a></div>`;
-        
+
         case 'divider':
           return `<div style="height: ${comp.props.height}; background-color: ${comp.props.backgroundColor}; margin: ${comp.props.margin};"></div>`;
-        
+
         case 'spacer':
           return `<div style="height: ${comp.props.height};"></div>`;
-        
+
         default:
           return '';
       }
@@ -255,7 +254,7 @@ const EmailTemplateBuilder = () => {
   // Render component in canvas
   const renderComponent = (component, index) => {
     const isSelected = selectedComponent?.id === component.id;
-    
+
     return (
       <div
         key={component.id}
@@ -281,7 +280,7 @@ const EmailTemplateBuilder = () => {
             {component.props.content}
           </p>
         )}
-        
+
         {component.type === 'heading' && (
           <h2 style={{
             fontSize: component.props.fontSize,
@@ -294,7 +293,7 @@ const EmailTemplateBuilder = () => {
             {component.props.content}
           </h2>
         )}
-        
+
         {component.type === 'image' && (
           <div style={{ textAlign: component.props.textAlign, margin: '10px 0' }}>
             <img 
@@ -308,7 +307,7 @@ const EmailTemplateBuilder = () => {
             />
           </div>
         )}
-        
+
         {component.type === 'button' && (
           <div style={{ textAlign: component.props.textAlign, margin: '20px 0' }}>
             <a
@@ -326,7 +325,7 @@ const EmailTemplateBuilder = () => {
             </a>
           </div>
         )}
-        
+
         {component.type === 'divider' && (
           <div style={{
             height: component.props.height,
@@ -334,7 +333,7 @@ const EmailTemplateBuilder = () => {
             margin: component.props.margin
           }}></div>
         )}
-        
+
         {component.type === 'spacer' && (
           <div style={{
             height: component.props.height,
@@ -349,7 +348,7 @@ const EmailTemplateBuilder = () => {
             Spacer ({component.props.height})
           </div>
         )}
-        
+
         {isSelected && (
           <div style={{
             position: 'absolute',
@@ -389,11 +388,11 @@ const EmailTemplateBuilder = () => {
     }
 
     const component = selectedComponent;
-    
+
     return (
       <div>
         <h4>Edit {component.type} properties:</h4>
-        
+
         {(component.type === 'text' || component.type === 'heading') && (
           <>
             <div style={{ marginBottom: '10px' }}>
@@ -410,7 +409,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.fontSize}
                 onChange={(e) => updateComponentProp(component.id, 'fontSize', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -419,7 +424,13 @@ const EmailTemplateBuilder = () => {
                 type="color"
                 value={component.props.color}
                 onChange={(e) => updateComponentProp(component.id, 'color', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -456,7 +467,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.src}
                 onChange={(e) => updateComponentProp(component.id, 'src', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -465,7 +482,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.alt}
                 onChange={(e) => updateComponentProp(component.id, 'alt', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -474,7 +497,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.width}
                 onChange={(e) => updateComponentProp(component.id, 'width', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -483,7 +512,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.height}
                 onChange={(e) => updateComponentProp(component.id, 'height', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -509,7 +544,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.text}
                 onChange={(e) => updateComponentProp(component.id, 'text', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -518,7 +559,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.href}
                 onChange={(e) => updateComponentProp(component.id, 'href', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -527,7 +574,13 @@ const EmailTemplateBuilder = () => {
                 type="color"
                 value={component.props.backgroundColor}
                 onChange={(e) => updateComponentProp(component.id, 'backgroundColor', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -536,7 +589,13 @@ const EmailTemplateBuilder = () => {
                 type="color"
                 value={component.props.color}
                 onChange={(e) => updateComponentProp(component.id, 'color', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -562,7 +621,13 @@ const EmailTemplateBuilder = () => {
                 type="text"
                 value={component.props.height}
                 onChange={(e) => updateComponentProp(component.id, 'height', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
             <div style={{ marginBottom: '10px' }}>
@@ -571,7 +636,13 @@ const EmailTemplateBuilder = () => {
                 type="color"
                 value={component.props.backgroundColor}
                 onChange={(e) => updateComponentProp(component.id, 'backgroundColor', e.target.value)}
-                style={{ width: '100%', padding: '4px' }}
+                style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
               />
             </div>
           </>
@@ -584,7 +655,13 @@ const EmailTemplateBuilder = () => {
               type="text"
               value={component.props.height}
               onChange={(e) => updateComponentProp(component.id, 'height', e.target.value)}
-              style={{ width: '100%', padding: '4px' }}
+              style={{ 
+                  width: '100%', 
+                  padding: '8px', 
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '14px'
+                }}
             />
           </div>
         )}
@@ -707,7 +784,7 @@ const EmailTemplateBuilder = () => {
               Preview
             </button>
           </div>
-          
+
           {/* Message Display */}
           {message.text && (
             <div style={{
