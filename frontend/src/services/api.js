@@ -1,8 +1,8 @@
 
 import axios from 'axios';
 
-// Use port 5000 for backend API calls in Replit
-const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:5000/email`;
+// Use relative URL with proxy configuration
+const API_BASE_URL = '/email';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
