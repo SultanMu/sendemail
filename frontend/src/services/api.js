@@ -1,9 +1,7 @@
-
-
 import axios from 'axios';
 
 // Use relative URL with proxy configuration
-const API_BASE_URL = '/email';
+const API_BASE_URL = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -68,4 +66,3 @@ export const templateAPI = {
 };
 
 export default api;
-

@@ -50,8 +50,8 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
   const selectedCampaign = campaigns.find(c => c.campaign_id === campaignId);
 
   // Prepare the final email HTML with replacements
-  let finalEmailHtml = templatePreview.html_content;
-  if (finalEmailHtml) {
+  let finalEmailHtml = templatePreview?.html_content || '';
+  if (finalEmailHtml && templatePreview) {
     // Replace placeholders with actual values - use the actual custom message or default
     const messageToUse = customMessage?.trim() || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
     
