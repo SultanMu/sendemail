@@ -29,11 +29,45 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
   const recipientEmail = sampleRecipient?.email || 'sample@example.com';
   const recipientName = sampleRecipient?.name || 'Sample Recipient';
 
-  const finalMessage = customMessage || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
+  const defaultMessage = 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
+  const finalMessage = customMessage || defaultMessage;
 
   return (
     <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-      <h3 style={{ marginBottom: '15px', color: '#333' }}>Final Email Preview (What Will Be Sent)</h3>
+      <h3 style={{ marginBottom: '15px', color: '#333' }}>📧 Final Email Preview (What Will Be Sent)</h3>
+      
+      {/* Message Status Indicator */}
+      <div style={{
+        padding: '12px',
+        marginBottom: '15px',
+        backgroundColor: customMessage ? '#d4edda' : '#fff3cd',
+        border: `1px solid ${customMessage ? '#c3e6cb' : '#ffeaa7'}`,
+        borderRadius: '8px',
+        fontSize: '14px'
+      }}>
+        {customMessage ? (
+          <div>
+            <strong style={{ color: '#155724' }}>✅ Custom Message Active:</strong>
+            <div style={{ 
+              marginTop: '8px', 
+              padding: '8px', 
+              backgroundColor: 'white', 
+              borderRadius: '4px',
+              fontStyle: 'italic',
+              border: '1px solid #c3e6cb'
+            }}>
+              "{customMessage}"
+            </div>
+          </div>
+        ) : (
+          <div>
+            <strong style={{ color: '#856404' }}>ℹ️ Using Default Message</strong>
+            <div style={{ marginTop: '4px', color: '#856404' }}>
+              Add a custom message above to personalize your emails
+            </div>
+          </div>
+        )}
+      </div>
       <div style={{ 
         border: '2px solid #28a745', 
         borderRadius: '8px', 
@@ -356,19 +390,53 @@ const EmailSender = () => {
           />
         </div>
 
+        {/* Preview Button */}
+        <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (!campaignId) {
+                showMessage('Please select a campaign first', 'error');
+                return;
+              }
+              if (!templatePreview) {
+                showMessage('Please wait for template to load', 'error');
+                return;
+              }
+              // Scroll to the preview section
+              const previewSection = document.getElementById('final-preview');
+              if (previewSection) {
+                previewSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="btn btn-primary"
+            disabled={!campaignId || !templatePreview}
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              marginRight: '15px'
+            }}
+          >
+            🔍 Preview Final Email
+          </button>
+          
+          <button type="submit" className="btn btn-success" disabled={loading || !campaignId}>
+            {loading ? 'Sending...' : '📧 Send Emails'}
+          </button>
+        </div>
+
         {/* Final Email Preview with Custom Message */}
         {templatePreview && campaignId && (
-          <FinalEmailPreview 
-            templatePreview={templatePreview}
-            customMessage={customMessage}
-            campaignId={campaignId}
-            campaigns={campaigns}
-          />
+          <div id="final-preview">
+            <FinalEmailPreview 
+              templatePreview={templatePreview}
+              customMessage={customMessage}
+              campaignId={campaignId}
+              campaigns={campaigns}
+            />
+          </div>
         )}
-
-        <button type="submit" className="btn btn-success" disabled={loading || !campaignId}>
-          {loading ? 'Sending...' : 'Send Emails'}
-        </button>
       </form>
 
       {message.text && (

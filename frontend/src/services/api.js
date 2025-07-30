@@ -1,4 +1,5 @@
 
+
 import axios from 'axios';
 
 // Use relative URL with proxy configuration
@@ -67,3 +68,4 @@ export const templateAPI = {
 };
 
 export default api;
+
