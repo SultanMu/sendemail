@@ -1,39 +1,49 @@
-version: '3'
+version: '3.8'
 
 services:
-  senemail-backend:
+  backend:
     build:
-      context: .
-    container_name: "senemail-backend"
-    command: >
-      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8010"
+      context: ./email_sender_backend
+      dockerfile: Dockerfile
+    container_name: "sendemail-backend"
     volumes:
-      - .:/app
-      - .env:/app/.env  # Mount the .env file into the container
+      - ./email_sender_backend:/app
     ports:
-      - "8010:8010"
+      - "5000:5000"
     depends_on:
-      - send-email-db
+      - db
     environment:
-      DATABASE_NAME: postgres
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: password123!
-      DATABASE_HOST: send-email-db
-      DATABASE_PORT: 5432
+      - DATABASE_NAME=postgres
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=password123!
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
     restart: always
 
-  send-email-db:
-    image: postgres:16
-    container_name: "send-email-db"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123!
-      POSTGRES_DB: postgres
+  frontend:
+    build:
+      context: ./email_sender_frontend
+      dockerfile: Dockerfile
+    container_name: "sendemail-frontend"
     ports:
-      - "5410:5432"
+      - "5175:5175"
     volumes:
-      - postgres_data2:/var/lib/postgresql/data
+      - ./email_sender_frontend:/app
+      - /app/node_modules
+    restart: always
+
+  db:
+    image: postgres:16
+    container_name: "sendemail-db"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password123!
+      - POSTGRES_DB=postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     restart: always
 
 volumes:
-  postgres_data2:
+  postgres_data:

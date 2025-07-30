@@ -1,28 +1,40 @@
-# Ignore Python cache files
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+.dockerignore
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Ignore virtual environment
+*.db
+*.sqlite3
+.venv/
 venv/
-.env/
-*.env
+env/
 
-# Ignore test files and logs
-*.log
-*.out
-*.coverage
-.coverage.*
+# Node
+node_modules
+npm-debug.log
+.npm
 
-# Ignore OS-generated files
+# Editor / OS
+.idea
+.vscode
+*.swp
 .DS_Store
 Thumbs.db
 
-# Ignore Git files
-.git/
-.gitignore
 
-# Ignore Docker files
-docker-compose.override.yml
-*.swp
+# Logs and other artifacts
+*.log
+*.pot
+*.pytx
+.pytest_cache/
+.coverage

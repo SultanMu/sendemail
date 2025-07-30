@@ -16,8 +16,8 @@ def run_django():
 
 def run_react():
     """Run React development server"""
-    print("Starting React frontend...")
-    os.chdir("frontend")
+    print("Starting React email_sender_frontend...")
+    os.chdir("email_sender_frontend")
     subprocess.run(["npm", "install"], check=True)
     env = os.environ.copy()
     env.update({

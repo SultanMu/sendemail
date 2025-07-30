@@ -24,9 +24,9 @@ def frontend_dashboard(request):
         <div class="container">
             <h1>Email Campaign Manager</h1>
             <p>Your Django backend is running on port 5000</p>
-            <p>Your React frontend is running on port 3000</p>
-            <p>Click below to access the React frontend:</p>
-            <a href="https://6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev:3000" class="btn" target="_blank">Open React Frontend</a>
+            <p>Your React email_sender_frontend is running on port 5175</p>
+            <p>Click below to access the React email_sender_frontend:</p>
+            <a href="http://localhost:5175" class="btn" target="_blank">Open React Frontend</a>
             <br><br>
             <p><small>If you're seeing this page, your Django server is working correctly. 
             The React app should be accessible on port 3000.</small></p>
