@@ -369,7 +369,10 @@ const EmailSender = () => {
                 border: '1px solid #eee'
               }}>
                 <iframe
-                  srcDoc={templatePreview.html_content}
+                  srcDoc={templatePreview.html_content
+                    ?.replace(/\{\{name\}\}/g, 'John Doe')
+                    ?.replace(/\{\{message\}\}/g, 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')
+                  }
                   style={{
                     width: '100%',
                     height: '100%',
