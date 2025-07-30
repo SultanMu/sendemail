@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Use the port 80 mapped backend URL for Replit environment
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev';
+// Use relative /api path that will be handled by Django
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
