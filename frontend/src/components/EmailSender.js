@@ -245,7 +245,55 @@ const EmailSender = () => {
           />
         </div>
 
-        <button type="submit" className="btn btn-success" disabled={loading}>
+        {/* Final Email Preview with Custom Message */}
+        {templatePreview && (customMessage || campaignId) && (
+          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+            <h3 style={{ marginBottom: '15px', color: '#333' }}>Final Email Preview (What Will Be Sent)</h3>
+            <div style={{ 
+              border: '2px solid #28a745', 
+              borderRadius: '8px', 
+              overflow: 'hidden',
+              boxShadow: '0 4px 12px rgba(40, 167, 69, 0.2)'
+            }}>
+              <div style={{ 
+                padding: '15px', 
+                backgroundColor: '#28a745', 
+                color: 'white'
+              }}>
+                <h4 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>
+                  📧 {templatePreview.template_name}
+                </h4>
+                <p style={{ margin: '0', fontSize: '14px' }}>
+                  <strong>Subject:</strong> {templatePreview.subject}
+                </p>
+                {customMessage && (
+                  <p style={{ margin: '10px 0 0 0', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px' }}>
+                    <strong>Custom Message:</strong> {customMessage}
+                  </p>
+                )}
+              </div>
+              <div style={{ 
+                height: '400px', 
+                overflow: 'auto',
+                backgroundColor: '#fff',
+                border: '1px solid #eee'
+              }}>
+                <iframe
+                  srcDoc={templatePreview.html_content?.replace('{{message}}', customMessage || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    display: 'block'
+                  }}
+                  title="Final Email Preview"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button type="submit" className="btn btn-success" disabled={loading || !campaignId}>
           {loading ? 'Sending...' : 'Send Emails'}
         </button>
       </form>
