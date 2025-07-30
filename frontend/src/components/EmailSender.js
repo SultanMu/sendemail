@@ -137,7 +137,7 @@ const EmailSender = () => {
             disabled={loading}
           >
             {templates.map((template, index) => (
-              <option key={`${template.type}-${template.template_id}-${index}`} value={template.template_id}>
+              <option key={`${template.template_id}-${template.type}-${index}`} value={template.template_id}>
                 {template.template_name} {template.type === 'custom' && '(Custom)'}
               </option>
             ))}
@@ -165,7 +165,7 @@ const EmailSender = () => {
       {/* Template Preview Section */}
       <div style={{ marginTop: '30px' }}>
         <h3 style={{ marginBottom: '15px', color: '#333' }}>Email Template Preview</h3>
-        
+
         {loadingPreview && (
           <div style={{ 
             padding: '20px', 

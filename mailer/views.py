@@ -1186,6 +1186,8 @@ class EmailTemplatePreviewView(APIView):
         if not template_id:
             return Response({"error": "Template ID is required"}, status=400)
 
+        print(f"Template preview requested for ID: {template_id}")
+
         try:
             # Check if it's a built-in template (1-4)
             builtin_templates = {
@@ -1228,7 +1230,12 @@ class EmailTemplatePreviewView(APIView):
             else:
                 # Check if it's a custom template
                 try:
-                    custom_template = EmailTemplate.objects.get(template_id=template_id)
+                    # Convert template_id to integer for custom templates
+                    template_id_int = int(template_id)
+                    print(f"Looking for custom template with ID: {template_id_int}")
+                    custom_template = EmailTemplate.objects.get(template_id=template_id_int)
+                    print(f"Found custom template: {custom_template.template_name}")</old_str>
+                    
                     # Replace placeholders for preview
                     html_content = custom_template.html_content
                     html_content = html_content.replace('{{name}}', 'John Doe')
@@ -1239,7 +1246,7 @@ class EmailTemplatePreviewView(APIView):
                         "subject": custom_template.subject,
                         "html_content": html_content
                     }, status=200)
-                except EmailTemplate.DoesNotExist:
+                except (EmailTemplate.DoesNotExist, ValueError):
                     return Response({"error": "Template not found"}, status=404)
 
         except Exception as e:
