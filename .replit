@@ -9,7 +9,7 @@ packages = ["pgadmin4"]
 run = ["sh", "-c", "python3 manage.py runserver 0.0.0.0:3000"]
 
 [workflows]
-runButton = "Run Fixed App"
+runButton = "Run Dual Server App"
 
 [[workflows.workflow]]
 name = "Run Django Server"
@@ -532,6 +532,19 @@ args = "python manage.py collectstatic --noinput"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python manage.py runserver 0.0.0.0:5000"
+
+[[workflows.workflow]]
+name = "Run Dual Server App"
+author = 41254074
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py migrate && python manage.py runserver 0.0.0.0:5000"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm install && REACT_APP_API_URL=https://6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev:5000/api HOST=0.0.0.0 PORT=3000 BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true npm start"
 
 [[ports]]
 localPort = 3000

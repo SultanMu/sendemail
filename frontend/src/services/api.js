@@ -1,8 +1,7 @@
-
 import axios from 'axios';
 
 // Use relative paths - Django will serve both frontend and API
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev:5000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
