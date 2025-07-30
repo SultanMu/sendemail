@@ -1,6 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import { emailAPI, campaignAPI, templateAPI } from '../services/api';
 
+const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaigns }) => {
+  const [campaignEmails, setCampaignEmails] = useState([]);
+  const [loadingEmails, setLoadingEmails] = useState(false);
+
+  useEffect(() => {
+    const fetchCampaignEmails = async () => {
+      if (!campaignId) return;
+      
+      try {
+        setLoadingEmails(true);
+        const response = await campaignAPI.getEmails(campaignId);
+        setCampaignEmails(response.data);
+      } catch (error) {
+        console.error('Error fetching campaign emails:', error);
+        setCampaignEmails([]);
+      } finally {
+        setLoadingEmails(false);
+      }
+    };
+
+    fetchCampaignEmails();
+  }, [campaignId]);
+
+  const selectedCampaign = campaigns.find(c => c.campaign_id === campaignId);
+  const sampleRecipient = campaignEmails.length > 0 ? campaignEmails[0] : null;
+  const recipientEmail = sampleRecipient?.email || 'sample@example.com';
+  const recipientName = sampleRecipient?.name || 'Sample Recipient';
+
+  const finalMessage = customMessage || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
+
+  return (
+    <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+      <h3 style={{ marginBottom: '15px', color: '#333' }}>Final Email Preview (What Will Be Sent)</h3>
+      <div style={{ 
+        border: '2px solid #28a745', 
+        borderRadius: '8px', 
+        overflow: 'hidden',
+        boxShadow: '0 4px 12px rgba(40, 167, 69, 0.2)'
+      }}>
+        {/* Email Header */}
+        <div style={{ 
+          padding: '15px', 
+          backgroundColor: '#f8f9fa',
+          borderBottom: '1px solid #dee2e6',
+          fontSize: '14px',
+          fontFamily: 'monospace'
+        }}>
+          <div style={{ marginBottom: '8px' }}>
+            <strong>From:</strong> info@autosad.ai
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <strong>To:</strong> {recipientEmail}
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <strong>Campaign:</strong> {selectedCampaign?.campaign_name || 'Selected Campaign'}
+          </div>
+          <div>
+            <strong>Subject:</strong> {templatePreview.subject}
+          </div>
+        </div>
+        
+        {/* Campaign Info */}
+        <div style={{ 
+          padding: '15px', 
+          backgroundColor: '#28a745', 
+          color: 'white'
+        }}>
+          <h4 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>
+            📧 {templatePreview.template_name}
+          </h4>
+          <div style={{ fontSize: '14px', marginTop: '10px' }}>
+            <div style={{ marginBottom: '5px' }}>
+              <strong>Recipient Count:</strong> {loadingEmails ? 'Loading...' : campaignEmails.length} emails
+            </div>
+            {customMessage && (
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
+                <strong>Custom Message:</strong> {customMessage}
+              </div>
+            )}
+            {!customMessage && (
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
+                <strong>Using Default Message</strong>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Final Email Content */}
+        <div style={{ 
+          height: '500px', 
+          overflow: 'auto',
+          backgroundColor: '#fff'
+        }}>
+          <iframe
+            srcDoc={templatePreview.html_content
+              ?.replace('{{message}}', finalMessage)
+              ?.replace('{{name}}', recipientName)}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              display: 'block'
+            }}
+            title="Final Email Preview"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EmailSender = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -246,75 +357,13 @@ const EmailSender = () => {
         </div>
 
         {/* Final Email Preview with Custom Message */}
-        {templatePreview && (customMessage || campaignId) && (
-          <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-            <h3 style={{ marginBottom: '15px', color: '#333' }}>Final Email Preview (What Will Be Sent)</h3>
-            <div style={{ 
-              border: '2px solid #28a745', 
-              borderRadius: '8px', 
-              overflow: 'hidden',
-              boxShadow: '0 4px 12px rgba(40, 167, 69, 0.2)'
-            }}>
-              {/* Email Header with TO field and Subject */}
-              <div style={{ 
-                padding: '15px', 
-                backgroundColor: '#f8f9fa',
-                borderBottom: '1px solid #dee2e6',
-                fontSize: '14px',
-                fontFamily: 'monospace'
-              }}>
-                <div style={{ marginBottom: '8px' }}>
-                  <strong>From:</strong> info@autosad.ai
-                </div>
-                <div style={{ marginBottom: '8px' }}>
-                  <strong>To:</strong> john.doe@example.com
-                </div>
-                <div>
-                  <strong>Subject:</strong> {templatePreview.subject}
-                </div>
-              </div>
-              
-              {/* Template Info Header */}
-              <div style={{ 
-                padding: '15px', 
-                backgroundColor: '#28a745', 
-                color: 'white'
-              }}>
-                <h4 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>
-                  📧 {templatePreview.template_name}
-                </h4>
-                {customMessage && (
-                  <p style={{ margin: '10px 0 0 0', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px' }}>
-                    <strong>Custom Message Used:</strong> {customMessage}
-                  </p>
-                )}
-                {!customMessage && (
-                  <p style={{ margin: '10px 0 0 0', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px' }}>
-                    <strong>Using Default Message</strong>
-                  </p>
-                )}
-              </div>
-              
-              {/* Email Body Content */}
-              <div style={{ 
-                height: '450px', 
-                overflow: 'auto',
-                backgroundColor: '#fff',
-                border: '1px solid #eee'
-              }}>
-                <iframe
-                  srcDoc={templatePreview.html_content?.replace('{{message}}', customMessage || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')?.replace('{{name}}', 'John Doe')}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                    display: 'block'
-                  }}
-                  title="Final Email Preview"
-                />
-              </div>
-            </div>
-          </div>
+        {templatePreview && campaignId && (
+          <FinalEmailPreview 
+            templatePreview={templatePreview}
+            customMessage={customMessage}
+            campaignId={campaignId}
+            campaigns={campaigns}
+          />
         )}
 
         <button type="submit" className="btn btn-success" disabled={loading || !campaignId}>
