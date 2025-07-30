@@ -255,6 +255,26 @@ const EmailSender = () => {
               overflow: 'hidden',
               boxShadow: '0 4px 12px rgba(40, 167, 69, 0.2)'
             }}>
+              {/* Email Header with TO field and Subject */}
+              <div style={{ 
+                padding: '15px', 
+                backgroundColor: '#f8f9fa',
+                borderBottom: '1px solid #dee2e6',
+                fontSize: '14px',
+                fontFamily: 'monospace'
+              }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>From:</strong> info@autosad.ai
+                </div>
+                <div style={{ marginBottom: '8px' }}>
+                  <strong>To:</strong> john.doe@example.com
+                </div>
+                <div>
+                  <strong>Subject:</strong> {templatePreview.subject}
+                </div>
+              </div>
+              
+              {/* Template Info Header */}
               <div style={{ 
                 padding: '15px', 
                 backgroundColor: '#28a745', 
@@ -263,23 +283,27 @@ const EmailSender = () => {
                 <h4 style={{ margin: '0 0 5px 0', fontSize: '18px' }}>
                   📧 {templatePreview.template_name}
                 </h4>
-                <p style={{ margin: '0', fontSize: '14px' }}>
-                  <strong>Subject:</strong> {templatePreview.subject}
-                </p>
                 {customMessage && (
                   <p style={{ margin: '10px 0 0 0', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px' }}>
-                    <strong>Custom Message:</strong> {customMessage}
+                    <strong>Custom Message Used:</strong> {customMessage}
+                  </p>
+                )}
+                {!customMessage && (
+                  <p style={{ margin: '10px 0 0 0', fontSize: '14px', backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px' }}>
+                    <strong>Using Default Message</strong>
                   </p>
                 )}
               </div>
+              
+              {/* Email Body Content */}
               <div style={{ 
-                height: '400px', 
+                height: '450px', 
                 overflow: 'auto',
                 backgroundColor: '#fff',
                 border: '1px solid #eee'
               }}>
                 <iframe
-                  srcDoc={templatePreview.html_content?.replace('{{message}}', customMessage || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')}
+                  srcDoc={templatePreview.html_content?.replace('{{message}}', customMessage || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')?.replace('{{name}}', 'John Doe')}
                   style={{
                     width: '100%',
                     height: '100%',
