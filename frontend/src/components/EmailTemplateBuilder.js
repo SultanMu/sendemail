@@ -387,7 +387,7 @@ const EmailTemplateBuilder = () => {
       return <p style={{ color: '#666', fontStyle: 'italic' }}>Select a component to edit its properties</p>;
     }
 
-    const component = selectedComponent;
+    const component = components.find(comp => comp.id === selectedComponent.id);
 
     return (
       <div>
@@ -418,8 +418,8 @@ const EmailTemplateBuilder = () => {
                 }}
               />
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Color:</label>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Color:</label>
               <input
                 type="color"
                 value={component.props.color}
@@ -568,8 +568,8 @@ const EmailTemplateBuilder = () => {
                 }}
               />
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Background Color:</label>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Background Color:</label>
               <input
                 type="color"
                 value={component.props.backgroundColor}
@@ -583,8 +583,8 @@ const EmailTemplateBuilder = () => {
                 }}
               />
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Text Color:</label>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Text Color:</label>
               <input
                 type="color"
                 value={component.props.color}
@@ -630,8 +630,8 @@ const EmailTemplateBuilder = () => {
                 }}
               />
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Color:</label>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Color:</label>
               <input
                 type="color"
                 value={component.props.backgroundColor}
