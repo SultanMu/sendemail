@@ -32,9 +32,14 @@ export const emailAPI = {
   },
   delete: (emailAddress, campaignId) => 
     api.post(`/delete-email?email_add=${encodeURIComponent(emailAddress)}&campaign_id=${campaignId}`),
-  send: (campaignId, emailTemplate, message) => 
-    api.post(`/send-emails/?campaign_id=${campaignId}&email_template=${emailTemplate}`, 
-      message ? { message } : {}),
+  send: (campaignId, emailTemplate, customMessage) => {
+    const url = `/email/send-emails/?campaign_id=${campaignId}&email_template=${emailTemplate}`;
+    return axios.post(url, { message: customMessage });
+  },
+
+  getTemplatePreview: (templateId) => {
+    return axios.get(`/email/template-preview/?template_id=${templateId}`);
+  }
 };
 
 export default api;

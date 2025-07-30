@@ -17,5 +17,6 @@ urlpatterns = [
     path('send-emails/', SendEmailsView.as_view(), name='send_emails'),
     path('delete-email', DeleteEmailView.as_view(), name='delete_email'),
     path('update-email', UpdateEmailView.as_view(), name='update_email'),
+    path('template-preview/', EmailTemplatePreviewView.as_view(), name='template_preview'),
     # path('sendemails', send_emails, name='send_emails'),
 ]
