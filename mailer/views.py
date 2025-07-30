@@ -232,14 +232,14 @@ class CampaignListView(APIView):
                 "Example Response",
                 value=[
                     {
-                        "id": 1,
-                        "name": "Holiday Sales Campaign",
+                        "campaign_id": 1,
+                        "campaign_name": "Holiday Sales Campaign",
                         "created_at": "2025-01-01T12:00:00Z",
                         "updated_at": "2025-01-02T08:00:00Z",
                     },
                     {
-                        "id": 2,
-                        "name": "Summer Discounts Campaign",
+                        "campaign_id": 2,
+                        "campaign_name": "Summer Discounts Campaign", 
                         "created_at": "2025-01-10T14:00:00Z",
                         "updated_at": "2025-01-12T10:30:00Z",
                     },
@@ -250,6 +250,8 @@ class CampaignListView(APIView):
     def get(self, request):
         try:
             campaigns = Campaign.objects.all().order_by("-created_at")
+            if not campaigns.exists():
+                return Response([], status=200)
             serializer = CampaignSerializer(campaigns, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
