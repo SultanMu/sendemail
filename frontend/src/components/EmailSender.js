@@ -51,13 +51,15 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
 
   // Prepare the final email HTML with replacements
   let finalEmailHtml = templatePreview.html_content;
-  if (finalEmailHtml && finalEmailContent.finalMessage) {
+  if (finalEmailHtml) {
     // Replace placeholders with actual values - use the actual custom message or default
-    finalEmailHtml = finalEmailHtml.replace(/\{\{message\}\}/g, finalEmailContent.finalMessage);
+    const messageToUse = customMessage?.trim() || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
+    
+    finalEmailHtml = finalEmailHtml.replace(/\{\{message\}\}/g, messageToUse);
     finalEmailHtml = finalEmailHtml.replace(/\{\{name\}\}/g, finalEmailContent.recipientName);
     
     // Ensure we're replacing all variations
-    finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, finalEmailContent.finalMessage);
+    finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, messageToUse);
     finalEmailHtml = finalEmailHtml.replace(/{{name}}/g, finalEmailContent.recipientName);
   }
 
@@ -76,7 +78,7 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
       }}>
         {customMessage?.trim() ? (
           <div>
-            <strong style={{ color: '#155724' }}>✅ Custom Message Will Replace Template Placeholder:</strong>
+            <strong style={{ color: '#155724' }}>✅ Custom Message Active - Replacing {{message}} placeholder:</strong>
             <div style={{ 
               marginTop: '8px', 
               padding: '8px', 
@@ -92,7 +94,7 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
           </div>
         ) : (
           <div>
-            <strong style={{ color: '#856404' }}>ℹ️ Using Default Message</strong>
+            <strong style={{ color: '#856404' }}>ℹ️ Using Default Message for {{message}} placeholder</strong>
             <div style={{ marginTop: '4px', color: '#856404' }}>
               Add a custom message above to personalize your emails
             </div>
