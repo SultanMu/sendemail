@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-6*t6e55j^td+d^3e@u25s&t0ldjx4)83$+$8%k1rkku^#407d8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["10.191.0.11", "0.0.0.0", "localhost", "6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -42,11 +42,13 @@ INSTALLED_APPS = [
     'mailer.apps.MailerConfig',
     'drf_spectacular',
     'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -152,7 +154,16 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")  # Be cautious with sensitive information
 
-
-# EMAIL_HOST_PASSWORD=18Wynf@rdautosad
-# EMAIL_HOST_USER='info@autosad.ai'
-# EMAIL_HOST=smtp.office365.com
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
