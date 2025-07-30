@@ -10,6 +10,7 @@ const EmailSender = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [templatePreview, setTemplatePreview] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
 
   useEffect(() => {
     const fetchCampaigns = async () => {
@@ -33,11 +34,13 @@ const EmailSender = () => {
   const loadTemplatePreview = async (templateId) => {
     try {
       setLoadingPreview(true);
+      setPreviewError(null);
       const response = await emailAPI.getTemplatePreview(templateId);
       setTemplatePreview(response.data);
     } catch (error) {
       console.error('Error loading template preview:', error);
       setTemplatePreview(null);
+      setPreviewError('Failed to load template preview');
     } finally {
       setLoadingPreview(false);
     }
@@ -128,46 +131,88 @@ const EmailSender = () => {
       </form>
 
       {/* Template Preview Section */}
-      {templatePreview && (
-        <div style={{ marginTop: '30px', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+      <div style={{ marginTop: '30px' }}>
+        <h3 style={{ marginBottom: '15px', color: '#333' }}>Email Template Preview</h3>
+        
+        {loadingPreview && (
           <div style={{ 
-            padding: '15px', 
-            backgroundColor: '#f8f9fa', 
-            borderBottom: '1px solid #ddd',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            padding: '20px', 
+            textAlign: 'center', 
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            border: '1px solid #ddd'
           }}>
-            <div>
-              <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#333' }}>
-                Email Preview: {templatePreview.template_name}
-              </h3>
+            <div style={{ fontSize: '16px', color: '#666' }}>Loading template preview...</div>
+          </div>
+        )}
+
+        {templatePreview && !loadingPreview && (
+          <div style={{ 
+            border: '1px solid #ddd', 
+            borderRadius: '8px', 
+            overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ 
+              padding: '15px', 
+              backgroundColor: '#f8f9fa', 
+              borderBottom: '1px solid #ddd'
+            }}>
+              <h4 style={{ margin: '0 0 5px 0', fontSize: '18px', color: '#333' }}>
+                {templatePreview.template_name}
+              </h4>
               <p style={{ margin: '0', fontSize: '14px', color: '#666' }}>
-                Subject: {templatePreview.subject}
+                <strong>Subject:</strong> {templatePreview.subject}
               </p>
             </div>
-            {loadingPreview && (
-              <div style={{ fontSize: '14px', color: '#666' }}>Loading...</div>
-            )}
+            <div style={{ 
+              height: '500px', 
+              overflow: 'auto',
+              backgroundColor: '#fff',
+              border: '1px solid #eee'
+            }}>
+              <iframe
+                srcDoc={templatePreview.html_content}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  display: 'block'
+                }}
+                title="Email Template Preview"
+              />
+            </div>
           </div>
+        )}
+
+        {previewError && !loadingPreview && (
           <div style={{ 
-            height: '400px', 
-            overflow: 'auto',
-            backgroundColor: '#fff'
+            padding: '20px', 
+            textAlign: 'center', 
+            backgroundColor: '#fef2f2',
+            borderRadius: '8px',
+            border: '1px solid #fecaca'
           }}>
-            <iframe
-              srcDoc={templatePreview.html_content}
-              style={{
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                display: 'block'
-              }}
-              title="Email Template Preview"
-            />
+            <div style={{ fontSize: '16px', color: '#dc2626' }}>
+              {previewError}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {!templatePreview && !loadingPreview && !previewError && (
+          <div style={{ 
+            padding: '20px', 
+            textAlign: 'center', 
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            border: '1px solid #ddd'
+          }}>
+            <div style={{ fontSize: '16px', color: '#666' }}>
+              Select a template above to see the preview
+            </div>
+          </div>
+        )}
+      </div>
 
       {message.text && (
         <div className={`alert ${message.type === 'error' ? 'alert-error' : 'alert-success'}`}>
