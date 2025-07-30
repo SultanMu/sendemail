@@ -19,23 +19,6 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
         setLoadingEmails(true);
         const response = await campaignAPI.getEmails(campaignId);
         setCampaignEmails(response.data);
-
-        // Update final email content when emails are fetched
-        if (response.data.length > 0) {
-          const sampleRecipient = response.data[0];
-          const recipientEmail = sampleRecipient?.email_address || 'sample@example.com';
-          const recipientName = sampleRecipient?.name || 'Sample Recipient';
-
-          const defaultMessage = 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
-          const finalMessage = customMessage?.trim() || defaultMessage;
-
-          setFinalEmailContent({
-            recipientEmail: recipientEmail,
-            recipientName: recipientName,
-            finalMessage: finalMessage,
-            isCustomMessage: !!customMessage?.trim(),
-          });
-        }
       } catch (error) {
         console.error('Error fetching campaign emails:', error);
         setCampaignEmails([]);
@@ -45,16 +28,37 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
     };
 
     fetchCampaignEmails();
-  }, [campaignId, customMessage]);
+  }, [campaignId]);
+
+  // Update final email content when custom message or campaign emails change
+  useEffect(() => {
+    const sampleRecipient = campaignEmails.length > 0 ? campaignEmails[0] : null;
+    const recipientEmail = sampleRecipient?.email_address || 'sample@example.com';
+    const recipientName = sampleRecipient?.name || 'Sample Recipient';
+
+    const defaultMessage = 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
+    const finalMessage = customMessage?.trim() || defaultMessage;
+
+    setFinalEmailContent({
+      recipientEmail: recipientEmail,
+      recipientName: recipientName,
+      finalMessage: finalMessage,
+      isCustomMessage: !!customMessage?.trim(),
+    });
+  }, [campaignEmails, customMessage]);
 
   const selectedCampaign = campaigns.find(c => c.campaign_id === campaignId);
 
   // Prepare the final email HTML with replacements
   let finalEmailHtml = templatePreview.html_content;
-  if (finalEmailHtml) {
-    // Replace placeholders with actual values
+  if (finalEmailHtml && finalEmailContent.finalMessage) {
+    // Replace placeholders with actual values - use the actual custom message or default
     finalEmailHtml = finalEmailHtml.replace(/\{\{message\}\}/g, finalEmailContent.finalMessage);
     finalEmailHtml = finalEmailHtml.replace(/\{\{name\}\}/g, finalEmailContent.recipientName);
+    
+    // Ensure we're replacing all variations
+    finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, finalEmailContent.finalMessage);
+    finalEmailHtml = finalEmailHtml.replace(/{{name}}/g, finalEmailContent.recipientName);
   }
 
   return (
@@ -72,15 +76,17 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
       }}>
         {customMessage?.trim() ? (
           <div>
-            <strong style={{ color: '#155724' }}>✅ Custom Message Active:</strong>
+            <strong style={{ color: '#155724' }}>✅ Custom Message Will Replace Template Placeholder:</strong>
             <div style={{ 
               marginTop: '8px', 
               padding: '8px', 
               backgroundColor: 'white', 
               borderRadius: '4px',
               fontStyle: 'italic',
-              border: '1px solid #c3e6cb'
+              border: '1px solid #c3e6cb',
+              fontSize: '13px'
             }}>
+              <strong>Your Custom Message:</strong><br/>
               "{customMessage.trim()}"
             </div>
           </div>
@@ -139,12 +145,14 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
             </div>
             {finalEmailContent.isCustomMessage ? (
               <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
-                <strong>✅ Custom Message Inserted:</strong>
-                <div style={{ marginTop: '4px', fontStyle: 'italic' }}>"{finalEmailContent.finalMessage.substring(0, 100)}..."</div>
+                <strong>✅ Custom Message Active in Preview:</strong>
+                <div style={{ marginTop: '4px', fontStyle: 'italic', fontSize: '13px' }}>
+                  "{finalEmailContent.finalMessage.length > 100 ? finalEmailContent.finalMessage.substring(0, 100) + '...' : finalEmailContent.finalMessage}"
+                </div>
               </div>
             ) : (
               <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
-                <strong>ℹ️ Using Default Message</strong>
+                <strong>ℹ️ Using Default Message in Preview</strong>
               </div>
             )}
           </div>
