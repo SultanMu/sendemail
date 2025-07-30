@@ -1244,7 +1244,9 @@ class EmailTemplatePreviewView(APIView):
                     template_id_int = int(template_id)
                     print(f"Looking for custom template with ID: {template_id_int}")
                     custom_template = EmailTemplate.objects.get(template_id=template_id_int)
-                    print(f"Found custom template: {custom_template.template_name}")</old_str>
+                    print(f"Found custom template: {custom_template.template_name}")
+                    
+                    # Load template content from file if it's a filename, otherwise use stored content</old_str>
                     
                     # Load template content from file if it's a filename, otherwise use stored content
                     if custom_template.html_content.endswith('.html'):
