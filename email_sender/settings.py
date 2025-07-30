@@ -131,9 +131,14 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    BASE_DIR / 'frontend' / 'build' / 'static',
-]
+
+# Only add STATICFILES_DIRS if the build directory exists
+import os
+build_static_path = BASE_DIR / 'frontend' / 'build' / 'static'
+if os.path.exists(build_static_path):
+    STATICFILES_DIRS = [build_static_path]
+else:
+    STATICFILES_DIRS = []
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
