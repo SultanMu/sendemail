@@ -19,6 +19,23 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
         setLoadingEmails(true);
         const response = await campaignAPI.getEmails(campaignId);
         setCampaignEmails(response.data);
+
+        // Update final email content when emails are fetched
+        if (response.data.length > 0) {
+          const sampleRecipient = response.data[0];
+          const recipientEmail = sampleRecipient?.email_address || 'sample@example.com';
+          const recipientName = sampleRecipient?.name || 'Sample Recipient';
+
+          const defaultMessage = 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
+          const finalMessage = customMessage?.trim() || defaultMessage;
+
+          setFinalEmailContent({
+            recipientEmail: recipientEmail,
+            recipientName: recipientName,
+            finalMessage: finalMessage,
+            isCustomMessage: !!customMessage?.trim(),
+          });
+        }
       } catch (error) {
         console.error('Error fetching campaign emails:', error);
         setCampaignEmails([]);
@@ -28,35 +45,16 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
     };
 
     fetchCampaignEmails();
-  }, [campaignId]);
-
-  // Update final email content when custom message or campaign emails change
-  useEffect(() => {
-    const sampleRecipient = campaignEmails.length > 0 ? campaignEmails[0] : null;
-    const recipientEmail = sampleRecipient?.email_address || 'sample@example.com';
-    const recipientName = sampleRecipient?.name || 'Sample Recipient';
-
-    const defaultMessage = 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
-    const finalMessage = customMessage?.trim() || defaultMessage;
-
-    setFinalEmailContent({
-      recipientEmail: recipientEmail,
-      recipientName: recipientName,
-      finalMessage: finalMessage,
-      isCustomMessage: !!customMessage?.trim(),
-    });
-  }, [campaignEmails, customMessage]);
+  }, [campaignId, customMessage]);
 
   const selectedCampaign = campaigns.find(c => c.campaign_id === campaignId);
 
   // Prepare the final email HTML with replacements
-  let finalEmailHtml = templatePreview?.html_content || '';
-  if (finalEmailHtml && templatePreview) {
-    // Replace placeholders with actual values - use the actual custom message or default
-    const messageToUse = customMessage?.trim() || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
-
-    finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, messageToUse);
-    finalEmailHtml = finalEmailHtml.replace(/{{name}}/g, finalEmailContent.recipientName);
+  let finalEmailHtml = templatePreview.html_content;
+  if (finalEmailHtml) {
+    // Replace placeholders with actual values
+    finalEmailHtml = finalEmailHtml.replace(/\{\{message\}\}/g, finalEmailContent.finalMessage);
+    finalEmailHtml = finalEmailHtml.replace(/\{\{name\}\}/g, finalEmailContent.recipientName);
   }
 
   return (
@@ -74,23 +72,21 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
       }}>
         {customMessage?.trim() ? (
           <div>
-            <strong style={{ color: '#155724' }}>✅ Custom Message Active - Replacing {{message}} placeholder:</strong>
+            <strong style={{ color: '#155724' }}>✅ Custom Message Active:</strong>
             <div style={{ 
               marginTop: '8px', 
               padding: '8px', 
               backgroundColor: 'white', 
               borderRadius: '4px',
               fontStyle: 'italic',
-              border: '1px solid #c3e6cb',
-              fontSize: '13px'
+              border: '1px solid #c3e6cb'
             }}>
-              <strong>Your Custom Message:</strong><br/>
               "{customMessage.trim()}"
             </div>
           </div>
         ) : (
           <div>
-            <strong style={{ color: '#856404' }}>ℹ️ Using Default Message for {{message}} placeholder</strong>
+            <strong style={{ color: '#856404' }}>ℹ️ Using Default Message</strong>
             <div style={{ marginTop: '4px', color: '#856404' }}>
               Add a custom message above to personalize your emails
             </div>
@@ -143,14 +139,12 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
             </div>
             {finalEmailContent.isCustomMessage ? (
               <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
-                <strong>✅ Custom Message Active in Preview:</strong>
-                <div style={{ marginTop: '4px', fontStyle: 'italic', fontSize: '13px' }}>
-                  "{finalEmailContent.finalMessage.length > 100 ? finalEmailContent.finalMessage.substring(0, 100) + '...' : finalEmailContent.finalMessage}"
-                </div>
+                <strong>✅ Custom Message Inserted:</strong>
+                <div style={{ marginTop: '4px', fontStyle: 'italic' }}>"{finalEmailContent.finalMessage.substring(0, 100)}..."</div>
               </div>
             ) : (
               <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
-                <strong>ℹ️ Using Default Message in Preview</strong>
+                <strong>ℹ️ Using Default Message</strong>
               </div>
             )}
           </div>
@@ -367,10 +361,7 @@ const EmailSender = () => {
                 border: '1px solid #eee'
               }}>
                 <iframe
-                  srcDoc={templatePreview.html_content
-                    ?.replace(/\{\{name\}\}/g, 'John Doe')
-                    ?.replace(/\{\{message\}\}/g, 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')
-                  }
+                  srcDoc={templatePreview.html_content}
                   style={{
                     width: '100%',
                     height: '100%',

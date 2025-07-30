@@ -1223,20 +1223,20 @@ class EmailTemplatePreviewView(APIView):
                 }
             }
 
-            try:
-                if template_id in builtin_templates:
-                    template_info = builtin_templates[template_id]
-                    # Return raw template with placeholders for frontend processing
-                    with open(f'mailer/templates/{template_info["file"]}', 'r', encoding='utf-8') as file:
-                        html_content = file.read()
-
-                    return Response({
-                        "template_name": template_info["name"],
-                        "subject": template_info["subject"], 
-                        "html_content": html_content
-                    }, status=200)
-            except:
-                pass
+            if template_id in builtin_templates:
+                template_info = builtin_templates[template_id]
+                # Render template with sample data for preview
+                context = {
+                    "name": "John Doe",
+                    "message": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
+                }
+                html_content = render_to_string(template_info["file"], context)
+                
+                return Response({
+                    "template_name": template_info["name"],
+                    "subject": template_info["subject"], 
+                    "html_content": html_content
+                }, status=200)
             else:
                 # Check if it's a custom template
                 try:
@@ -1245,17 +1245,23 @@ class EmailTemplatePreviewView(APIView):
                     print(f"Looking for custom template with ID: {template_id_int}")
                     custom_template = EmailTemplate.objects.get(template_id=template_id_int)
                     print(f"Found custom template: {custom_template.template_name}")
-
+                    
+                    # Load template content from file if it's a filename, otherwise use stored content</old_str>
+                    
+                    # Load template content from file if it's a filename, otherwise use stored content
                     if custom_template.html_content.endswith('.html'):
-                        try:
-                            with open(f'mailer/templates/{custom_template.html_content}', 'r', encoding='utf-8') as file:
-                                html_content = file.read()
-                        except FileNotFoundError:
-                            return Response({"error": "Template file not found"}, status=404)
-
+                        # It's a filename, load from file using render_to_string
+                        context = {
+                            "name": "John Doe",
+                            "message": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
+                        }
+                        html_content = render_to_string(custom_template.html_content, context)
                     else:
+                        # Legacy: stored content directly in database
                         html_content = custom_template.html_content
-                    # Return raw template with placeholders intact for frontend processing
+                        html_content = html_content.replace('{{name}}', 'John Doe')
+                        html_content = html_content.replace('{{message}}', 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')
+                    
                     return Response({
                         "template_name": custom_template.template_name,
                         "subject": custom_template.subject,
@@ -1294,7 +1300,7 @@ class EmailTemplateListView(APIView):
     def get(self, request):
         try:
             templates = []
-
+            
             # Add built-in templates
             builtin_templates = [
                 {"template_id": "1", "template_name": "AutoSAD v1", "type": "builtin"},
@@ -1303,7 +1309,7 @@ class EmailTemplateListView(APIView):
                 {"template_id": "4", "template_name": "AutoSAD v3", "type": "builtin"}
             ]
             templates.extend(builtin_templates)
-
+            
             # Add custom templates with proper error handling
             try:
                 # Try to fetch custom templates directly - Django will handle table existence
@@ -1314,13 +1320,13 @@ class EmailTemplateListView(APIView):
                         "template_name": template.template_name,
                         "type": "custom"
                     })
-
+                        
             except Exception as db_error:
                 print(f"Error fetching custom templates: {db_error}")
                 # Continue with just built-in templates if database error occurs
-
+            
             return Response(templates, status=200)
-
+            
         except Exception as e:
             print(f"Error in EmailTemplateListView: {e}")
             # Return built-in templates even if there's an error
@@ -1348,22 +1354,22 @@ class EmailTemplateCreateView(APIView):
             if serializer.is_valid():
                 # Save the template to get the ID
                 template = serializer.save()
-
+                
                 # Save the HTML content as a file in the templates folder
                 import os
                 template_filename = f"custom_template_{template.template_id}.html"
                 template_path = os.path.join(settings.BASE_DIR, 'mailer', 'templates', template_filename)
-
+                
                 # Ensure the templates directory exists
                 os.makedirs(os.path.dirname(template_path), exist_ok=True)
-
+                
                 with open(template_path, 'w', encoding='utf-8') as f:
                     f.write(template.html_content)
-
+                
                 # Update the template record to store the filename instead of content
                 template.html_content = template_filename
                 template.save()
-
+                
                 return Response(serializer.data, status=201)
             return Response(serializer.errors, status=400)
         except Exception as e:

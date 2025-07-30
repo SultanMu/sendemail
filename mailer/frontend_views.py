@@ -1,28 +1,37 @@
+
 from django.shortcuts import render
 from django.http import HttpResponse
-import os
 from django.conf import settings
+import os
 
 def frontend_dashboard(request):
-    try:
-        # Serve the React build
-        template_path = os.path.join(settings.BASE_DIR, 'frontend', 'build', 'index.html')
-        if os.path.exists(template_path):
-            with open(template_path, 'r', encoding='utf-8') as f:
-                return HttpResponse(f.read(), content_type='text/html')
-        else:
-            # Fallback to development index.html if build doesn't exist
-            dev_template_path = os.path.join(settings.BASE_DIR, 'frontend', 'public', 'index.html')
-            if os.path.exists(dev_template_path):
-                with open(dev_template_path, 'r', encoding='utf-8') as f:
-                    return HttpResponse(f.read(), content_type='text/html')
-            else:
-                return HttpResponse(
-                    "<h1>Frontend not found</h1><p>Please ensure the React app is built or available</p>", 
-                    content_type='text/html'
-                )
-    except Exception as e:
-        return HttpResponse(
-            f"<h1>Error loading frontend</h1><p>{str(e)}</p>", 
-            content_type='text/html'
-        )
+    """Serve a simple HTML page that redirects to the React dev server"""
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Campaign Manager</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .container { max-width: 600px; margin: 0 auto; }
+            .btn { display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; margin: 10px; }
+            .btn:hover { background: #0056b3; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Email Campaign Manager</h1>
+            <p>Your Django backend is running on port 5000</p>
+            <p>Your React frontend is running on port 3000</p>
+            <p>Click below to access the React frontend:</p>
+            <a href="https://6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev:3000" class="btn" target="_blank">Open React Frontend</a>
+            <br><br>
+            <p><small>If you're seeing this page, your Django server is working correctly. 
+            The React app should be accessible on port 3000.</small></p>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html_content, content_type='text/html')

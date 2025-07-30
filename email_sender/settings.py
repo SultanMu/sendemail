@@ -27,49 +27,7 @@ SECRET_KEY = 'django-insecure-6*t6e55j^td+d^3e@u25s&t0ldjx4)83$+$8%k1rkku^#407d8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-# Static files configuration for serving React build
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'frontend/build/static'),
-]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Template configuration for serving React index.html
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'mailer/templates'),
-            os.path.join(BASE_DIR, 'frontend/build'),
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
+ALLOWED_HOSTS = ["10.191.0.11", "0.0.0.0", "localhost", "6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev"]
 
 
 # Application definition
@@ -90,6 +48,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -100,7 +59,7 @@ ROOT_URLCONF = 'email_sender.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'frontend' / 'build'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -173,10 +132,13 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Serve React build files
-STATICFILES_DIRS = [
-    BASE_DIR / 'frontend' / 'build' / 'static',
-]
+# Only add STATICFILES_DIRS if the build directory exists
+import os
+build_static_path = BASE_DIR / 'frontend' / 'build' / 'static'
+if os.path.exists(build_static_path):
+    STATICFILES_DIRS = [build_static_path]
+else:
+    STATICFILES_DIRS = []
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
