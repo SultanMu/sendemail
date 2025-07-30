@@ -9,7 +9,7 @@ packages = ["pgadmin4"]
 run = ["sh", "-c", "python3 manage.py runserver 0.0.0.0:3000"]
 
 [workflows]
-runButton = "Restart Full Application"
+runButton = "Fresh Start Application"
 
 [[workflows.workflow]]
 name = "Run Django Server"
@@ -67,6 +67,27 @@ args = "python manage.py migrate && python manage.py runserver 0.0.0.0:5000"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd frontend && npm install && REACT_APP_API_URL=http://0.0.0.0:5000 HOST=0.0.0.0 PORT=3000 BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true npm start"
+
+[[workflows.workflow]]
+name = "Fresh Start Application"
+author = 41254074
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py migrate"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py runserver 0.0.0.0:5000 &"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sleep 3"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm install && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true npm start"
 
 [[ports]]
 localPort = 3000
