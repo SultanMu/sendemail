@@ -1,6 +1,7 @@
+
 import axios from 'axios';
 
-// Use relative path to leverage the proxy configuration in package.json
+// Use relative paths - Django will serve both frontend and API
 const API_BASE_URL = '/api';
 
 const api = axios.create({
@@ -8,61 +9,52 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: false
 });
 
-// Add request interceptor for debugging
-api.interceptors.request.use(request => {
-  console.log('Starting Request:', request.url);
-  return request;
-});
+// Request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log('Starting Request:', config.url);
+    return config;
+  },
+  (error) => {
+    console.log('Request Error:', error);
+    return Promise.reject(error);
+  }
+);
 
-// Add response interceptor for error handling
+// Response interceptor for debugging  
 api.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('API Error:', error.response?.data || error.message);
+  (response) => {
+    console.log('Response received:', response.config.url, response.status);
+    return response;
+  },
+  (error) => {
+    console.log('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
 
 export const campaignAPI = {
-  list: () => api.get('/campaigns/'),
-  create: (data) => api.post('/campaigns/create', data),
-  update: (campaignId, campaignName) => 
-    api.post(`/update-campaign?campaign_id=${campaignId}&campaign_name=${encodeURIComponent(campaignName)}`),
-  delete: (campaignId) => 
-    api.post(`/delete-campaign?campaign_id=${campaignId}`),
-  getEmails: (campaignId) => 
-    api.get(`/list-emails/?campaign_id=${campaignId}`),
+  getCampaigns: () => api.get('/campaigns/'),
+  createCampaign: (data) => api.post('/campaigns/create', data),
+  updateCampaign: (data) => api.post('/update-campaign', data),
+  deleteCampaign: (data) => api.post('/delete-campaign', data),
 };
 
 export const emailAPI = {
-  list: (campaignId) => 
-    api.get(`/list-emails/?campaign_id=${campaignId}`),
-  upload: (campaignId, file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post(`/upload-xls/?campaign_id=${campaignId}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
-  delete: (emailAddress, campaignId) => 
-    api.post(`/delete-email?email_add=${encodeURIComponent(emailAddress)}&campaign_id=${campaignId}`),
-  send: (campaignId, emailTemplate, customMessage) => {
-    const url = `/send-emails/?campaign_id=${campaignId}&email_template=${emailTemplate}`;
-    return api.post(url, { message: customMessage });
-  },
-  getTemplatePreview: (templateId) => {
-    return api.get(`/template-preview/?template_id=${templateId}`);
-  }
+  uploadXLS: (data) => api.post('/upload-xls/', data),
+  getEmails: () => api.get('/list-emails/'),
+  sendEmails: (data) => api.post('/send-emails/', data),
+  deleteEmail: (data) => api.post('/delete-email', data),
+  updateEmail: (data) => api.post('/update-email', data),
 };
 
-// Template API
 export const templateAPI = {
-  list: () => api.get('/templates/'),
-  create: (templateData) => api.post('/templates/create/', templateData),
+  getTemplates: () => api.get('/templates/'),
+  createTemplate: (data) => api.post('/templates/create/', data),
+  getTemplatePreview: (templateId) => api.get(`/template-preview/?template_id=${templateId}`),
 };
 
 export default api;
