@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Use direct backend URL for Replit environment
+// Use the port 80 mapped backend URL for Replit environment
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev';
 
 const api = axios.create({
