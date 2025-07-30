@@ -6,15 +6,33 @@ const UnifiedCampaignManager = () => {
   const [step, setStep] = useState(1);
   const [campaignName, setCampaignName] = useState('');
   const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [campaigns, setCampaigns] = useState([]);
   const [file, setFile] = useState(null);
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [dragActive, setDragActive] = useState(false);
+  const [isCreatingNew, setIsCreatingNew] = useState(true);
+
+  useEffect(() => {
+    loadCampaigns();
+  }, []);
 
   const showMessage = (text, type) => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+  };
+
+  const loadCampaigns = async () => {
+    try {
+      setLoading(true);
+      const response = await campaignAPI.list();
+      setCampaigns(response.data);
+    } catch (error) {
+      showMessage('Error loading campaigns', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createCampaign = async (e) => {
@@ -30,11 +48,18 @@ const UnifiedCampaignManager = () => {
       setSelectedCampaign(response.data);
       setStep(2);
       showMessage('Campaign created successfully!', 'success');
+      loadCampaigns(); // Refresh the campaign list
     } catch (error) {
       showMessage(error.response?.data?.error || 'Error creating campaign', 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const selectExistingCampaign = (campaign) => {
+    setSelectedCampaign(campaign);
+    setStep(2);
+    showMessage(`Selected campaign: ${campaign.campaign_name}`, 'success');
   };
 
   const handleDrag = (e) => {
@@ -105,6 +130,14 @@ const UnifiedCampaignManager = () => {
     setFile(null);
     setEmails([]);
     setMessage({ text: '', type: '' });
+    setIsCreatingNew(true);
+  };
+
+  const goToCampaignSelection = () => {
+    setStep(1);
+    setSelectedCampaign(null);
+    setFile(null);
+    setEmails([]);
   };
 
   return (
@@ -120,7 +153,7 @@ const UnifiedCampaignManager = () => {
             }}>
               <span style={styles.progressNumber}>{num}</span>
               <span style={styles.progressLabel}>
-                {num === 1 ? 'Create Campaign' : num === 2 ? 'Upload Emails' : 'Manage Emails'}
+                {num === 1 ? 'Select Campaign' : num === 2 ? 'Upload Emails' : 'Manage Emails'}
               </span>
             </div>
           ))}
@@ -137,30 +170,92 @@ const UnifiedCampaignManager = () => {
         </div>
       )}
 
-      {/* Step 1: Campaign Creation */}
+      {/* Step 1: Campaign Selection/Creation */}
       {step === 1 && (
         <div style={styles.card}>
-          <h2 style={styles.cardTitle}>Create New Campaign</h2>
-          <form onSubmit={createCampaign} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Campaign Name</label>
-              <input
-                type="text"
-                value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
-                placeholder="Enter a descriptive campaign name"
-                style={styles.input}
-                disabled={loading}
-              />
-            </div>
-            <button 
-              type="submit" 
-              style={{...styles.button, ...styles.buttonPrimary}}
-              disabled={loading}
+          <h2 style={styles.cardTitle}>Campaign Management</h2>
+          
+          {/* Toggle between Create New and Select Existing */}
+          <div style={styles.toggleContainer}>
+            <button
+              onClick={() => setIsCreatingNew(true)}
+              style={{
+                ...styles.toggleButton,
+                ...(isCreatingNew ? styles.toggleButtonActive : {})
+              }}
             >
-              {loading ? 'Creating...' : 'Create Campaign & Continue'}
+              Create New Campaign
             </button>
-          </form>
+            <button
+              onClick={() => setIsCreatingNew(false)}
+              style={{
+                ...styles.toggleButton,
+                ...(!isCreatingNew ? styles.toggleButtonActive : {})
+              }}
+            >
+              Select Existing Campaign
+            </button>
+          </div>
+
+          {isCreatingNew ? (
+            /* Create New Campaign */
+            <form onSubmit={createCampaign} style={styles.form}>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Campaign Name</label>
+                <input
+                  type="text"
+                  value={campaignName}
+                  onChange={(e) => setCampaignName(e.target.value)}
+                  placeholder="Enter a descriptive campaign name"
+                  style={styles.input}
+                  disabled={loading}
+                />
+              </div>
+              <button 
+                type="submit" 
+                style={{...styles.button, ...styles.buttonPrimary}}
+                disabled={loading}
+              >
+                {loading ? 'Creating...' : 'Create Campaign & Continue'}
+              </button>
+            </form>
+          ) : (
+            /* Select Existing Campaign */
+            <div style={styles.campaignSelector}>
+              {loading && <div style={styles.loading}>Loading campaigns...</div>}
+              
+              {!loading && campaigns.length === 0 && (
+                <div style={styles.emptyState}>
+                  <div style={styles.emptyIcon}>📁</div>
+                  <div style={styles.emptyText}>No campaigns found</div>
+                  <div style={styles.emptySubtext}>Create your first campaign to get started</div>
+                </div>
+              )}
+
+              {campaigns.length > 0 && (
+                <div style={styles.campaignList}>
+                  <h3 style={styles.sectionTitle}>Select a Campaign ({campaigns.length} available)</h3>
+                  {campaigns.map(campaign => (
+                    <div key={campaign.campaign_id} style={styles.campaignCard}>
+                      <div style={styles.campaignInfo}>
+                        <div style={styles.campaignName}>{campaign.campaign_name}</div>
+                        <div style={styles.campaignId}>ID: {campaign.campaign_id}</div>
+                        <div style={styles.campaignDate}>
+                          Created: {new Date(campaign.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => selectExistingCampaign(campaign)}
+                        style={{...styles.button, ...styles.buttonPrimary}}
+                      >
+                        Select Campaign
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -215,10 +310,10 @@ const UnifiedCampaignManager = () => {
 
           <div style={styles.buttonGroup}>
             <button 
-              onClick={resetFlow} 
+              onClick={goToCampaignSelection} 
               style={{...styles.button, ...styles.buttonSecondary}}
             >
-              Back
+              Back to Campaigns
             </button>
             <button 
               onClick={uploadEmails}
@@ -236,7 +331,7 @@ const UnifiedCampaignManager = () => {
         <div style={styles.card}>
           <div style={styles.emailHeader}>
             <div>
-              <h2 style={styles.cardTitle}>Email List</h2>
+              <h2 style={styles.cardTitle}>Email Management</h2>
               <p style={styles.campaignInfo}>
                 Campaign: <strong>{selectedCampaign.campaign_name}</strong> ({emails.length} emails)
               </p>
@@ -296,7 +391,7 @@ const UnifiedCampaignManager = () => {
 
 const styles = {
   container: {
-    maxWidth: '800px',
+    maxWidth: '900px',
     margin: '0 auto',
     padding: '20px',
     fontFamily: 'system-ui, -apple-system, sans-serif'
@@ -376,10 +471,71 @@ const styles = {
     borderRadius: '8px',
     fontSize: '16px',
     outline: 'none',
-    transition: 'border-color 0.2s',
-    ':focus': {
-      borderColor: '#3b82f6'
-    }
+    transition: 'border-color 0.2s'
+  },
+  toggleContainer: {
+    display: 'flex',
+    marginBottom: '24px',
+    backgroundColor: '#f3f4f6',
+    borderRadius: '8px',
+    padding: '4px'
+  },
+  toggleButton: {
+    flex: 1,
+    padding: '12px 16px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    color: '#6b7280'
+  },
+  toggleButtonActive: {
+    backgroundColor: 'white',
+    color: '#3b82f6',
+    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+  },
+  campaignSelector: {
+    minHeight: '300px'
+  },
+  sectionTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: '16px'
+  },
+  campaignList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px'
+  },
+  campaignCard: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    backgroundColor: '#f9fafb',
+    transition: 'all 0.2s',
+    cursor: 'pointer'
+  },
+  campaignName: {
+    fontWeight: '600',
+    color: '#374151',
+    fontSize: '16px'
+  },
+  campaignId: {
+    color: '#6b7280',
+    fontSize: '14px',
+    marginTop: '4px'
+  },
+  campaignDate: {
+    color: '#9ca3af',
+    fontSize: '12px',
+    marginTop: '4px'
   },
   button: {
     padding: '12px 24px',
