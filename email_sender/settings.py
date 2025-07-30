@@ -1,4 +1,3 @@
-
 """
 Django settings for email_sender project.
 
@@ -28,7 +27,14 @@ SECRET_KEY = 'django-insecure-6*t6e55j^td+d^3e@u25s&t0ldjx4)83$+$8%k1rkku^#407d8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    '6ed162ac-9da7-45c5-89f5-3f39365ed118-00-2cxn4kbi86ete.janeway.replit.dev',
+    '.replit.dev',
+    '.repl.co'
+]
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True

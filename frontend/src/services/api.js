@@ -45,6 +45,19 @@ export const campaignAPI = {
 };
 
 export const emailAPI = {
+  upload: (campaignId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/upload-xls/?campaign_id=${campaignId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  list: (campaignId) => api.get(`/list-emails/?campaign_id=${campaignId}`),
+  delete: (emailAddress, campaignId) => api.post(`/delete-email?email_add=${encodeURIComponent(emailAddress)}&campaign_id=${campaignId}`),
+  send: (campaignId, templateId, message) => api.post(`/send-emails/?campaign_id=${campaignId}&email_template=${templateId}`, { message }),
+  // Legacy methods for backward compatibility
   uploadXLS: (data) => api.post('/upload-xls/', data),
   getEmails: () => api.get('/list-emails/'),
   sendEmails: (data) => api.post('/send-emails/', data),

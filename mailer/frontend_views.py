@@ -1,39 +1,28 @@
-
 from django.shortcuts import render
 from django.http import HttpResponse
-from django.conf import settings
-from django.template.loader import get_template
 import os
+from django.conf import settings
 
 def frontend_dashboard(request):
-    """Serve the React app's index.html file"""
     try:
-        # Try to serve the built React app
-        template = get_template('index.html')
-        return HttpResponse(template.render(request=request))
-    except:
-        # Fallback if build doesn't exist
-        html_content = """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Email Campaign Manager</title>
-            <style>
-                body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-                .container { max-width: 600px; margin: 0 auto; }
-                .btn { display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; margin: 10px; }
-                .btn:hover { background: #0056b3; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>Email Campaign Manager</h1>
-                <p>React app is being built...</p>
-                <p>Please wait while the frontend is prepared.</p>
-            </div>
-        </body>
-        </html>
-        """
-        return HttpResponse(html_content, content_type='text/html')
+        # Serve the React build
+        template_path = os.path.join(settings.BASE_DIR, 'frontend', 'build', 'index.html')
+        if os.path.exists(template_path):
+            with open(template_path, 'r', encoding='utf-8') as f:
+                return HttpResponse(f.read(), content_type='text/html')
+        else:
+            # Fallback to development index.html if build doesn't exist
+            dev_template_path = os.path.join(settings.BASE_DIR, 'frontend', 'public', 'index.html')
+            if os.path.exists(dev_template_path):
+                with open(dev_template_path, 'r', encoding='utf-8') as f:
+                    return HttpResponse(f.read(), content_type='text/html')
+            else:
+                return HttpResponse(
+                    "<h1>Frontend not found</h1><p>Please ensure the React app is built or available</p>", 
+                    content_type='text/html'
+                )
+    except Exception as e:
+        return HttpResponse(
+            f"<h1>Error loading frontend</h1><p>{str(e)}</p>", 
+            content_type='text/html'
+        )
