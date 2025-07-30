@@ -137,7 +137,7 @@ const EmailSender = () => {
             disabled={loading}
           >
             {templates.map((template) => (
-              <option key={template.template_id} value={template.template_id}>
+              <option key={`${template.type}-${template.template_id}`} value={template.template_id}>
                 {template.template_name} {template.type === 'custom' && '(Custom)'}
               </option>
             ))}

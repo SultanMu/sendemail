@@ -1283,17 +1283,22 @@ class EmailTemplateListView(APIView):
             templates.extend(builtin_templates)
             
             # Add custom templates
-            custom_templates = EmailTemplate.objects.all().order_by('-created_at')
-            for template in custom_templates:
-                templates.append({
-                    "template_id": str(template.template_id),
-                    "template_name": template.template_name,
-                    "type": "custom"
-                })
+            try:
+                custom_templates = EmailTemplate.objects.all().order_by('-created_at')
+                for template in custom_templates:
+                    templates.append({
+                        "template_id": str(template.template_id),
+                        "template_name": template.template_name,
+                        "type": "custom"
+                    })
+            except Exception as db_error:
+                print(f"Error fetching custom templates: {db_error}")
+                # Continue with just built-in templates if database error occurs
             
             return Response(templates, status=200)
             
         except Exception as e:
+            print(f"Error in EmailTemplateListView: {e}")
             return Response({"error": str(e)}, status=500)
 
 
