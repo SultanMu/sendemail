@@ -57,10 +57,6 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
 
     finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, messageToUse);
     finalEmailHtml = finalEmailHtml.replace(/{{name}}/g, finalEmailContent.recipientName);
-
-    // Ensure we're replacing all variations
-    finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, messageToUse);
-    finalEmailHtml = finalEmailHtml.replace(/{{name}}/g, finalEmailContent.recipientName);
   }
 
   return (
