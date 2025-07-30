@@ -13,6 +13,16 @@ const EmailSender = () => {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState(null);
 
+  const fetchTemplates = async () => {
+    try {
+      const response = await templateAPI.list();
+      setTemplates(response.data);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      showMessage('Error fetching templates', 'error');
+    }
+  };
+
   useEffect(() => {
     const fetchCampaigns = async () => {
       try {
@@ -24,24 +34,33 @@ const EmailSender = () => {
       }
     };
 
-    const fetchTemplates = async () => {
-      try {
-        const response = await templateAPI.list();
-        setTemplates(response.data);
-      } catch (error) {
-        console.error('Error fetching templates:', error);
-        showMessage('Error fetching templates', 'error');
-      }
-    };
-
     fetchCampaigns();
     fetchTemplates();
     loadTemplatePreview(emailTemplate); // Load initial template
+
+    // Listen for custom events when new templates are created
+    const handleTemplateCreated = () => {
+      fetchTemplates();
+    };
+
+    window.addEventListener('templateCreated', handleTemplateCreated);
+
+    return () => {
+      window.removeEventListener('templateCreated', handleTemplateCreated);
+    };
   }, []);
 
   useEffect(() => {
     loadTemplatePreview(emailTemplate);
   }, [emailTemplate]);
+
+  // Expose refresh function globally for other components to use
+  useEffect(() => {
+    window.refreshTemplates = fetchTemplates;
+    return () => {
+      delete window.refreshTemplates;
+    };
+  }, []);
 
   const loadTemplatePreview = async (templateId) => {
     try {

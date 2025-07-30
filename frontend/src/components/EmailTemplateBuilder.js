@@ -46,6 +46,9 @@ const EmailTemplateBuilder = () => {
 
       showMessage('Template saved successfully!', 'success');
       
+      // Notify other components that a new template was created
+      window.dispatchEvent(new CustomEvent('templateCreated'));
+      
       // Optionally reset form
       setTemplateName('');
       setSubject('');

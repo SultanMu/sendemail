@@ -1229,10 +1229,15 @@ class EmailTemplatePreviewView(APIView):
                 # Check if it's a custom template
                 try:
                     custom_template = EmailTemplate.objects.get(template_id=template_id)
+                    # Replace placeholders for preview
+                    html_content = custom_template.html_content
+                    html_content = html_content.replace('{{name}}', 'John Doe')
+                    html_content = html_content.replace('{{message}}', 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.')
+                    
                     return Response({
                         "template_name": custom_template.template_name,
                         "subject": custom_template.subject,
-                        "html_content": custom_template.html_content
+                        "html_content": html_content
                     }, status=200)
                 except EmailTemplate.DoesNotExist:
                     return Response({"error": "Template not found"}, status=404)
