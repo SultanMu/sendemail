@@ -1,8 +1,6 @@
 
 import React from 'react';
-import CampaignManager from './components/CampaignManager';
-import EmailUploader from './components/EmailUploader';
-import EmailManager from './components/EmailManager';
+import UnifiedCampaignManager from './components/UnifiedCampaignManager';
 import EmailSender from './components/EmailSender';
 
 function App() {
@@ -13,12 +11,7 @@ function App() {
         <p>Manage campaigns and send bulk emails</p>
       </header>
       
-      <div className="grid">
-        <CampaignManager />
-        <EmailUploader />
-      </div>
-      
-      <EmailManager />
+      <UnifiedCampaignManager />
       <EmailSender />
     </div>
   );
