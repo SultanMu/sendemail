@@ -1,19 +1,36 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { emailAPI } from '../services/api';
 
 const EmailSender = () => {
+  const [campaigns, setCampaigns] = useState([]);
   const [campaignId, setCampaignId] = useState('');
   const [emailTemplate, setEmailTemplate] = useState('1');
   const [customMessage, setCustomMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
+  useEffect(() => {
+    // Fetch campaigns from API (replace with your actual API endpoint)
+    const fetchCampaigns = async () => {
+      try {
+        // const response = await fetch('/api/campaigns'); // Replace with your API endpoint
+        // const data = await response.json();
+        const data = [{campaign_id: "1", campaign_name: "Campaign A"}, {campaign_id: "2", campaign_name: "Campaign B"}];
+        setCampaigns(data);
+      } catch (error) {
+        console.error('Error fetching campaigns:', error);
+        showMessage('Error fetching campaigns', 'error');
+      }
+    };
+
+    fetchCampaigns();
+  }, []);
+
   const sendEmails = async (e) => {
     e.preventDefault();
-    
+
     if (!campaignId) {
-      showMessage('Please enter a campaign ID', 'error');
+      showMessage('Please select a campaign', 'error');
       return;
     }
 
@@ -21,7 +38,7 @@ const EmailSender = () => {
       setLoading(true);
       const response = await emailAPI.send(campaignId, emailTemplate, customMessage);
       showMessage(
-        `${response.data.message} - Sent: ${response.data.details.sent}, Failed: ${response.data.details.failed}`, 
+        `${response.data.message} - Sent: ${response.data.details.sent}, Failed: ${response.data.details.failed}`,
         'success'
       );
     } catch (error) {
@@ -39,21 +56,26 @@ const EmailSender = () => {
   return (
     <div className="section">
       <h2>Send Emails</h2>
-      
+
       <form onSubmit={sendEmails}>
         <div className="form-group">
-          <label htmlFor="sendCampaignId">Campaign ID:</label>
-          <input
-            type="number"
+          <label htmlFor="sendCampaignId">Select Campaign:</label>
+          <select
             id="sendCampaignId"
             className="form-control"
             value={campaignId}
             onChange={(e) => setCampaignId(e.target.value)}
-            placeholder="Enter campaign ID"
             disabled={loading}
-          />
+          >
+            <option value="">Select a campaign</option>
+            {campaigns.map((campaign) => (
+              <option key={campaign.campaign_id} value={campaign.campaign_id}>
+                    {campaign.campaign_name}
+                  </option>
+            ))}
+          </select>
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="emailTemplate">Email Template:</label>
           <select
@@ -69,7 +91,7 @@ const EmailSender = () => {
             <option value="4">AutoSAD v3</option>
           </select>
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="customMessage">Custom Message (optional):</label>
           <textarea
@@ -82,7 +104,7 @@ const EmailSender = () => {
             disabled={loading}
           />
         </div>
-        
+
         <button type="submit" className="btn btn-success" disabled={loading}>
           {loading ? 'Sending...' : 'Send Emails'}
         </button>
