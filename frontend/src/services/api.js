@@ -1,7 +1,6 @@
-
 import axios from 'axios';
 
-const API_BASE = '/email';
+const API_BASE = 'http://0.0.0.0:5000/email';
 
 const api = axios.create({
   baseURL: API_BASE,
