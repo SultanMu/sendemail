@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { campaignAPI, emailAPI } from '../services/api';
 
@@ -59,7 +58,7 @@ const UnifiedCampaignManager = () => {
   const selectExistingCampaign = async (campaign) => {
     setSelectedCampaign(campaign);
     showMessage(`Selected campaign: ${campaign.campaign_name}`, 'success');
-    
+
     // Load existing emails for this campaign
     try {
       setLoading(true);
@@ -194,7 +193,7 @@ const UnifiedCampaignManager = () => {
       {step === 1 && (
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>Campaign Management</h2>
-          
+
           {/* Toggle between Create New and Select Existing */}
           <div style={styles.toggleContainer}>
             <button
@@ -243,7 +242,7 @@ const UnifiedCampaignManager = () => {
             /* Select Existing Campaign */
             <div style={styles.campaignSelector}>
               {loading && <div style={styles.loading}>Loading campaigns...</div>}
-              
+
               {!loading && campaigns.length === 0 && (
                 <div style={styles.emptyState}>
                   <div style={styles.emptyIcon}>📁</div>
@@ -286,7 +285,7 @@ const UnifiedCampaignManager = () => {
           <p style={styles.campaignInfo}>
             Campaign: <strong>{selectedCampaign.campaign_name}</strong> (ID: {selectedCampaign.campaign_id})
           </p>
-          
+
           <div
             style={{
               ...styles.dropZone,
@@ -306,7 +305,7 @@ const UnifiedCampaignManager = () => {
               onChange={(e) => setFile(e.target.files[0])}
               style={styles.hiddenInput}
             />
-            
+
             {file ? (
               <div style={styles.fileSelected}>
                 <div style={styles.fileIcon}>📄</div>
@@ -373,7 +372,7 @@ const UnifiedCampaignManager = () => {
           </div>
 
           {loading && <div style={styles.loading}>Loading emails...</div>}
-          
+
           {!loading && emails.length === 0 && (
             <div style={styles.emptyState}>
               <div style={styles.emptyIcon}>📧</div>
