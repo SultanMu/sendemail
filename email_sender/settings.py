@@ -87,18 +87,13 @@ SPECTACULAR_SETTINGS = {
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
-
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config("DATABASE_NAME"),
-        'USER': config("DATABASE_USER"),
-        'PASSWORD': config("DATABASE_PASSWORD"),
-        'HOST': config("DATABASE_HOST"),
-        'PORT': config("DATABASE_PORT"),
+        'NAME': config("DATABASE_NAME", default="email_campaign_db"),
+        'USER': config("DATABASE_USER", default="postgres"),
+        'PASSWORD': config("DATABASE_PASSWORD", default="postgres"),
+        'HOST': config("DATABASE_HOST", default="db"),
+        'PORT': config("DATABASE_PORT", default="5432"),
     }
 }
 

@@ -24,6 +24,9 @@ from drf_spectacular.types import OpenApiTypes
 from .models import Email, Campaign
 from .serializers import EmailSerializer, CampaignSerializer
 from django.conf import settings
+from .models import EmailTemplate
+from .serializers import EmailTemplateSerializer, EmailTemplateCreateSerializer, TemplatePreviewSerializer, CampaignDetailSerializer, EmailTemplateUpdateSerializer
+from django.db import models
 
 # 1) view for listing existing campaigns - list it with id, name
 # 2) view for adding new campaigns - user will provide campaign name and model will be created
@@ -39,28 +42,51 @@ from django.conf import settings
 class CampaignListView(APIView):
     @extend_schema(
         responses={
-            200: CampaignSerializer(many=True),
+            200: CampaignDetailSerializer(many=True),
             500: OpenApiResponse(
                 description="Server error",
                 examples={"application/json": {"error": "Error message"}},
             ),
         },
-        description="List all existing campaigns.",
+        description="List all existing campaigns with template information.",
         examples=[
             OpenApiExample(
                 "Example Response",
                 value=[
                     {
-                        "id": 1,
-                        "name": "Holiday Sales Campaign",
+                        "campaign_id": 1,
+                        "campaign_name": "Holiday Sales Campaign",
                         "created_at": "2025-01-01T12:00:00Z",
                         "updated_at": "2025-01-02T08:00:00Z",
+                        "custom_template": None,
+                        "custom_template_id": None,
+                        "custom_subject": "",
+                        "custom_message": "",
+                        "use_custom_template": False,
                     },
                     {
-                        "id": 2,
-                        "name": "Summer Discounts Campaign",
+                        "campaign_id": 2,
+                        "campaign_name": "Summer Discounts Campaign",
                         "created_at": "2025-01-10T14:00:00Z",
                         "updated_at": "2025-01-12T10:30:00Z",
+                        "custom_template": {
+                            "template_id": 1,
+                            "name": "Welcome Template",
+                            "description": "Welcome email template",
+                            "subject": "Welcome!",
+                            "html_content": "<html>...</html>",
+                            "css_styles": "",
+                            "is_active": True,
+                            "is_default": False,
+                            "created_at": "2025-01-01T00:00:00Z",
+                            "updated_at": "2025-01-01T00:00:00Z",
+                            "template_variables": [],
+                            "variables_count": 0,
+                        },
+                        "custom_template_id": 1,
+                        "custom_subject": "Welcome to Summer Discounts!",
+                        "custom_message": "Enjoy our summer discounts!",
+                        "use_custom_template": True,
                     },
                 ],
             )
@@ -69,7 +95,7 @@ class CampaignListView(APIView):
     def get(self, request):
         try:
             campaigns = Campaign.objects.all().order_by("-created_at")
-            serializer = CampaignSerializer(campaigns, many=True)
+            serializer = CampaignDetailSerializer(campaigns, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -943,3 +969,452 @@ class UpdateEmailView(APIView):
             )
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
+
+# ==================== TEMPLATE MANAGEMENT VIEWS ====================
+
+class TemplateListView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "active_only",
+                type=bool,
+                location="query",
+                required=False,
+                description="Filter to show only active templates",
+            ),
+            OpenApiParameter(
+                "search",
+                type=str,
+                location="query",
+                required=False,
+                description="Search templates by name or description",
+            ),
+        ],
+        responses={
+            200: EmailTemplateSerializer(many=True),
+            500: OpenApiResponse(
+                description="Server error",
+                examples={"application/json": {"error": "Error message"}},
+            ),
+        },
+        description="List all available email templates with optional filtering.",
+    )
+    def get(self, request):
+        try:
+            templates = EmailTemplate.objects.all()
+            
+            # Filter by active status
+            active_only = request.query_params.get("active_only", "false").lower() == "true"
+            if active_only:
+                templates = templates.filter(is_active=True)
+            
+            # Search functionality
+            search = request.query_params.get("search", "")
+            if search:
+                templates = templates.filter(
+                    models.Q(name__icontains=search) | 
+                    models.Q(description__icontains=search)
+                )
+            
+            serializer = EmailTemplateSerializer(templates, many=True)
+            return Response(serializer.data, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class TemplateCreateView(APIView):
+    @extend_schema(
+        request=EmailTemplateCreateSerializer,
+        responses={
+            201: EmailTemplateSerializer,
+            400: OpenApiResponse(
+                description="Validation error",
+                examples={"application/json": {"error": "Validation error details"}},
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples={"application/json": {"error": "Error message"}},
+            ),
+        },
+        description="Create a new email template with optional variables.",
+    )
+    def post(self, request):
+        try:
+            serializer = EmailTemplateCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                # Check if template with the same name already exists
+                if EmailTemplate.objects.filter(name=serializer.validated_data["name"]).exists():
+                    return Response(
+                        {"error": "A template with this name already exists."},
+                        status=400,
+                    )
+                
+                template = serializer.save()
+                response_serializer = EmailTemplateSerializer(template)
+                return Response(response_serializer.data, status=201)
+            
+            return Response(serializer.errors, status=400)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class TemplateDetailView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "template_id",
+                type=int,
+                location="path",
+                required=True,
+                description="Template ID",
+            ),
+        ],
+        responses={
+            200: EmailTemplateSerializer,
+            404: OpenApiResponse(
+                description="Template not found",
+                examples={"application/json": {"error": "Template not found"}},
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples={"application/json": {"error": "Error message"}},
+            ),
+        },
+        description="Get detailed information about a specific template.",
+    )
+    def get(self, request, template_id):
+        try:
+            template = EmailTemplate.objects.get(template_id=template_id)
+            serializer = EmailTemplateSerializer(template)
+            return Response(serializer.data, status=200)
+        except EmailTemplate.DoesNotExist:
+            return Response({"error": "Template not found."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class TemplateUpdateView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "template_id",
+                type=int,
+                location="path",
+                required=True,
+                description="Template ID",
+            ),
+        ],
+        request=EmailTemplateUpdateSerializer,
+        responses={
+            200: EmailTemplateSerializer,
+            400: OpenApiResponse(
+                description="Validation error",
+                examples={"application/json": {"error": "Validation error details"}},
+            ),
+            404: OpenApiResponse(
+                description="Template not found",
+                examples={"application/json": {"error": "Template not found"}},
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples={"application/json": {"error": "Error message"}},
+            ),
+        },
+        description="Update an existing email template.",
+    )
+    def put(self, request, template_id):
+        try:
+            template = EmailTemplate.objects.get(template_id=template_id)
+            serializer = EmailTemplateUpdateSerializer(template, data=request.data)
+            if serializer.is_valid():
+                updated_template = serializer.save()
+                response_serializer = EmailTemplateSerializer(updated_template)
+                return Response(response_serializer.data, status=200)
+            return Response(serializer.errors, status=400)
+        except EmailTemplate.DoesNotExist:
+            return Response({"error": "Template not found."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class TemplateDeleteView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "template_id",
+                type=int,
+                location="path",
+                required=True,
+                description="Template ID",
+            ),
+        ],
+        responses={
+            204: None,
+            404: OpenApiResponse(
+                description="Template not found",
+                examples={"application/json": {"error": "Template not found"}},
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples={"application/json": {"error": "Error message"}},
+            ),
+        },
+        description="Delete an email template.",
+    )
+    def delete(self, request, template_id):
+        try:
+            template = EmailTemplate.objects.get(template_id=template_id)
+            template.delete()
+            return Response(status=204)
+        except EmailTemplate.DoesNotExist:
+            return Response({"error": "Template not found."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class TemplatePreviewView(APIView):
+    @extend_schema(
+        request=TemplatePreviewSerializer,
+        responses={
+            200: OpenApiResponse(
+                description="Template preview with rendered HTML",
+                examples={
+                    "application/json": {
+                        "template_id": 1,
+                        "subject": "Welcome to our platform",
+                        "html_content": "<html>...</html>",
+                        "variables_used": ["name", "company"]
+                    }
+                },
+            ),
+            400: OpenApiResponse(
+                description="Validation error",
+                examples={"application/json": {"error": "Validation error details"}},
+            ),
+            404: OpenApiResponse(
+                description="Template not found",
+                examples={"application/json": {"error": "Template not found"}},
+            ),
+        },
+        description="Preview a template with sample data.",
+    )
+    def post(self, request):
+        try:
+            serializer = TemplatePreviewSerializer(data=request.data)
+            if serializer.is_valid():
+                template_id = serializer.validated_data["template_id"]
+                sample_data = serializer.validated_data.get("sample_data", {})
+                
+                template = EmailTemplate.objects.get(template_id=template_id)
+                
+                # Render template with sample data
+                from django.template import Template, Context
+                template_obj = Template(template.html_content)
+                context = Context(sample_data)
+                rendered_html = template_obj.render(context)
+                
+                return Response({
+                    "template_id": template_id,
+                    "subject": template.subject,
+                    "html_content": rendered_html,
+                    "variables_used": list(sample_data.keys())
+                }, status=200)
+            
+            return Response(serializer.errors, status=400)
+        except EmailTemplate.DoesNotExist:
+            return Response({"error": "Template not found."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class CampaignTemplateUpdateView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "campaign_id",
+                type=int,
+                location="query",
+                required=True,
+                description="Campaign ID",
+            ),
+        ],
+        request=CampaignDetailSerializer,
+        responses={
+            200: CampaignDetailSerializer,
+            400: OpenApiResponse(
+                description="Validation error",
+                examples={"application/json": {"error": "Validation error details"}},
+            ),
+            404: OpenApiResponse(
+                description="Campaign not found",
+                examples={"application/json": {"error": "Campaign not found"}},
+            ),
+        },
+        description="Update campaign template and custom message settings.",
+    )
+    def post(self, request):
+        campaign_id = request.query_params.get("campaign_id")
+        
+        if not campaign_id:
+            return Response({"error": "Campaign ID is required."}, status=400)
+        
+        try:
+            campaign = Campaign.objects.get(campaign_id=campaign_id)
+            serializer = CampaignDetailSerializer(campaign, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                updated_campaign = serializer.save()
+                response_serializer = CampaignDetailSerializer(updated_campaign)
+                return Response(response_serializer.data, status=200)
+            
+            return Response(serializer.errors, status=400)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found."}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+# Enhanced SendEmailsView with custom template support
+class EnhancedSendEmailsView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "campaign_id",
+                type=int,
+                location="query",
+                required=True,
+                description="ID of the campaign to send emails for.",
+            ),
+        ],
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "Custom message to send in the email (optional).",
+                    },
+                    "subject": {
+                        "type": "string", 
+                        "description": "Custom subject line (optional).",
+                    },
+                    "use_custom_template": {
+                        "type": "boolean",
+                        "description": "Whether to use campaign's custom template (default: false).",
+                    }
+                },
+            }
+        },
+        responses={
+            200: OpenApiResponse(
+                description="Emails processed successfully.",
+                examples={
+                    "application/json": {
+                        "message": "Emails sent successfully!",
+                        "details": {"sent": 10, "failed": 2},
+                        "template_used": "Custom Template Name",
+                        "custom_message_used": "Custom message content",
+                    }
+                },
+            ),
+            400: OpenApiResponse(
+                description="Invalid or missing campaign ID.",
+                examples={"application/json": {"error": "Invalid or missing campaign ID."}},
+            ),
+            404: OpenApiResponse(
+                description="No emails found for the given campaign.",
+                examples={"application/json": {"error": "No emails found for the given campaign."}},
+            ),
+        },
+        description="Send emails using custom templates and messages.",
+    )
+    def post(self, request):
+        campaign_id = request.query_params.get("campaign_id")
+        
+        if not campaign_id:
+            return Response({"error": "Campaign ID is required."}, status=400)
+        
+        try:
+            campaign = Campaign.objects.get(campaign_id=campaign_id)
+        except Campaign.DoesNotExist:
+            return Response({"error": "Campaign not found."}, status=404)
+        
+        emails = Email.objects.filter(campaign_id=campaign)
+        
+        if not emails.exists():
+            return Response({"error": "No emails found for the given campaign."}, status=404)
+        
+        # Get custom settings from request
+        custom_message = request.data.get("message", campaign.custom_message)
+        custom_subject = request.data.get("subject", campaign.custom_subject)
+        use_custom_template = request.data.get("use_custom_template", campaign.use_custom_template)
+        
+        # Determine which template to use
+        if use_custom_template and campaign.custom_template:
+            template = campaign.custom_template
+            template_name = template.name
+            subject = custom_subject or template.subject
+        else:
+            # Fall back to default templates (existing logic)
+            email_template = request.query_params.get("email_template", "1")
+            if email_template == "1":
+                template_name = "autosad-temp-email.html"
+                subject = custom_subject or "Welcome to AUTOSAD Get Certified"
+            elif email_template == "2":
+                template_name = "XCV_AI.html"
+                subject = custom_subject or "Welcome onboard to XCV AI"
+            elif email_template == "3":
+                template_name = "autosad-temp-email2.html"
+                subject = custom_subject or "Welcome to AUTOSAD Get Certified"
+            elif email_template == "4":
+                template_name = "autosad-email-temp-3.html"
+                subject = custom_subject or "Welcome to AUTOSAD"
+            else:
+                return Response({"error": "Invalid template selection."}, status=400)
+        
+        success_count = 0
+        failure_count = 0
+        
+        for email in emails:
+            try:
+                context = {
+                    "name": email.name,
+                    "message": custom_message or "Thank you for applying to the AUTOSAD Get Certified program...",
+                }
+                
+                # Use custom template if available
+                if use_custom_template and campaign.custom_template:
+                    html_content = render_to_string_from_template(campaign.custom_template, context)
+                else:
+                    html_content = render_to_string(template_name, context)
+                
+                send_mail(
+                    subject=subject,
+                    message="",
+                    from_email="info@autosad.ai",
+                    recipient_list=[email.email_address],
+                    html_message=html_content,
+                )
+                success_count += 1
+                
+            except Exception as e:
+                failure_count += 1
+                print(f"Failed to send email to {email.email_address}: {str(e)}")
+        
+        return Response({
+            "message": "Emails sent successfully!",
+            "details": {
+                "sent": success_count,
+                "failed": failure_count,
+            },
+            "template_used": template_name if not use_custom_template else (campaign.custom_template.name if campaign.custom_template else "Custom Template"),
+            "custom_message_used": custom_message,
+        }, status=200 if failure_count == 0 else 207)
+
+
+def render_to_string_from_template(template_obj, context):
+    """Helper function to render custom template with context"""
+    from django.template import Template, Context
+    template = Template(template_obj.html_content)
+    return template.render(Context(context))

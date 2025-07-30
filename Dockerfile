@@ -1,26 +1,32 @@
-# Base image
 FROM python:3.9-alpine
 
-# Set the working directory
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set work directory
 WORKDIR /app
 
-# Install necessary system packages
-RUN apk add --no-cache gcc musl-dev libffi-dev postgresql-dev
+# Install system dependencies
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    postgresql-dev \
+    bash
 
-# Copy the requirements file
-COPY requirements.txt /app/
-
-# Install dependencies
+# Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the project files
-COPY . /app/
+# Copy project
+COPY . .
 
-# # Set the environment variables
-# ENV PYTHONUNBUFFERED=1
+# Make the startup script executable
+RUN chmod +x /app/start_docker.sh
 
-# Expose the application port
-EXPOSE 8010
+# Expose ports
+EXPOSE 8000 8501
 
-# Run the Django server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8010"]
+# Run the startup script
+CMD ["/app/start_docker.sh"]
