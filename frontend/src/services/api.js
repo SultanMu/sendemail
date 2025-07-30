@@ -33,6 +33,8 @@ export const campaignAPI = {
     api.post(`/update-campaign?campaign_id=${campaignId}&campaign_name=${encodeURIComponent(campaignName)}`),
   delete: (campaignId) => 
     api.post(`/delete-campaign?campaign_id=${campaignId}`),
+  getEmails: (campaignId) => 
+    api.get(`/list-emails/?campaign_id=${campaignId}`),
 };
 
 export const emailAPI = {
