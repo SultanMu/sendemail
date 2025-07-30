@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { emailAPI } from '../services/api';
+import { emailAPI, campaignAPI } from '../services/api';
 
 const EmailSender = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -10,13 +10,10 @@ const EmailSender = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
 
   useEffect(() => {
-    // Fetch campaigns from API (replace with your actual API endpoint)
     const fetchCampaigns = async () => {
       try {
-        // const response = await fetch('/api/campaigns'); // Replace with your API endpoint
-        // const data = await response.json();
-        const data = [{campaign_id: "1", campaign_name: "Campaign A"}, {campaign_id: "2", campaign_name: "Campaign B"}];
-        setCampaigns(data);
+        const response = await campaignAPI.list();
+        setCampaigns(response.data);
       } catch (error) {
         console.error('Error fetching campaigns:', error);
         showMessage('Error fetching campaigns', 'error');
