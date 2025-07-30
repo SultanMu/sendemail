@@ -136,8 +136,8 @@ const EmailSender = () => {
             onChange={(e) => setEmailTemplate(e.target.value)}
             disabled={loading}
           >
-            {templates.map((template) => (
-              <option key={`${template.type}-${template.template_id}`} value={template.template_id}>
+            {templates.map((template, index) => (
+              <option key={`${template.type}-${template.template_id}-${index}`} value={template.template_id}>
                 {template.template_name} {template.type === 'custom' && '(Custom)'}
               </option>
             ))}
