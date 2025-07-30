@@ -26,11 +26,19 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
 
   const selectedCampaign = campaigns.find(c => c.campaign_id === campaignId);
   const sampleRecipient = campaignEmails.length > 0 ? campaignEmails[0] : null;
-  const recipientEmail = sampleRecipient?.email || 'sample@example.com';
+  const recipientEmail = sampleRecipient?.email_address || 'sample@example.com';
   const recipientName = sampleRecipient?.name || 'Sample Recipient';
 
   const defaultMessage = 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
-  const finalMessage = customMessage || defaultMessage;
+  const finalMessage = customMessage?.trim() || defaultMessage;
+
+  // Prepare the final email HTML with replacements
+  let finalEmailHtml = templatePreview.html_content;
+  if (finalEmailHtml) {
+    // Replace placeholders with actual values
+    finalEmailHtml = finalEmailHtml.replace(/\{\{message\}\}/g, finalMessage);
+    finalEmailHtml = finalEmailHtml.replace(/\{\{name\}\}/g, recipientName);
+  }
 
   return (
     <div style={{ marginTop: '20px', marginBottom: '20px' }}>
@@ -45,7 +53,7 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
         borderRadius: '8px',
         fontSize: '14px'
       }}>
-        {customMessage ? (
+        {customMessage?.trim() ? (
           <div>
             <strong style={{ color: '#155724' }}>✅ Custom Message Active:</strong>
             <div style={{ 
@@ -56,7 +64,7 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
               fontStyle: 'italic',
               border: '1px solid #c3e6cb'
             }}>
-              "{customMessage}"
+              "{customMessage.trim()}"
             </div>
           </div>
         ) : (
@@ -109,14 +117,17 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
             <div style={{ marginBottom: '5px' }}>
               <strong>Recipient Count:</strong> {loadingEmails ? 'Loading...' : campaignEmails.length} emails
             </div>
-            {customMessage && (
+            <div style={{ marginBottom: '5px' }}>
+              <strong>Sample Recipient:</strong> {recipientName} ({recipientEmail})
+            </div>
+            {customMessage?.trim() ? (
               <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
-                <strong>Custom Message:</strong> {customMessage}
+                <strong>✅ Custom Message Will Be Used:</strong>
+                <div style={{ marginTop: '4px', fontStyle: 'italic' }}>"{customMessage.trim()}"</div>
               </div>
-            )}
-            {!customMessage && (
+            ) : (
               <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '4px', marginTop: '8px' }}>
-                <strong>Using Default Message</strong>
+                <strong>ℹ️ Using Default Message</strong>
               </div>
             )}
           </div>
@@ -129,9 +140,7 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
           backgroundColor: '#fff'
         }}>
           <iframe
-            srcDoc={templatePreview.html_content
-              ?.replace('{{message}}', finalMessage)
-              ?.replace('{{name}}', recipientName)}
+            srcDoc={finalEmailHtml}
             style={{
               width: '100%',
               height: '100%',
