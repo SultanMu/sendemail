@@ -54,10 +54,10 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
   if (finalEmailHtml && templatePreview) {
     // Replace placeholders with actual values - use the actual custom message or default
     const messageToUse = customMessage?.trim() || 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
-    
-    finalEmailHtml = finalEmailHtml.replace(/\{\{message\}\}/g, messageToUse);
-    finalEmailHtml = finalEmailHtml.replace(/\{\{name\}\}/g, finalEmailContent.recipientName);
-    
+
+    finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, messageToUse);
+    finalEmailHtml = finalEmailHtml.replace(/{{name}}/g, finalEmailContent.recipientName);
+
     // Ensure we're replacing all variations
     finalEmailHtml = finalEmailHtml.replace(/{{message}}/g, messageToUse);
     finalEmailHtml = finalEmailHtml.replace(/{{name}}/g, finalEmailContent.recipientName);
