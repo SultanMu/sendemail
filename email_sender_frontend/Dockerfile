@@ -1,20 +1,17 @@
-# Use Node.js 20 Alpine as the base image
 FROM node:20-alpine
-
+ 
 # Set working directory
 WORKDIR /app
-
-# Copy package.json and package-lock.json
+ 
+# Install dependencies separately to cache
 COPY package.json package-lock.json ./
-
-# Install dependencies
 RUN npm install
-
-# Copy the rest of the application data
+ 
+# Copy source (optional in dev since we're using volume)
 COPY . .
-
-# Expose the new Vite port
-EXPOSE 5175
-
-# Run in development mode with hot reloading on the new port
-CMD ["npx", "vite", "--host", "0.0.0.0", "--port", "5175"]
+ 
+# Expose dev server port
+EXPOSE 3000
+ 
+# Run your dev server (adjust if needed)
+CMD ["npm", "start"]
