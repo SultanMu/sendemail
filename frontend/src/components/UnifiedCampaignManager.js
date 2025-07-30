@@ -56,10 +56,29 @@ const UnifiedCampaignManager = () => {
     }
   };
 
-  const selectExistingCampaign = (campaign) => {
+  const selectExistingCampaign = async (campaign) => {
     setSelectedCampaign(campaign);
-    setStep(2);
     showMessage(`Selected campaign: ${campaign.campaign_name}`, 'success');
+    
+    // Load existing emails for this campaign
+    try {
+      setLoading(true);
+      const response = await emailAPI.list(campaign.campaign_id);
+      if (response.data && response.data.length > 0) {
+        setEmails(response.data);
+        setStep(3); // Go directly to email management if emails exist
+        showMessage(`Loaded ${response.data.length} existing emails`, 'success');
+      } else {
+        setStep(2); // Go to file upload if no emails exist
+        showMessage('No emails found. Please upload an email list.', 'info');
+      }
+    } catch (error) {
+      // If there's an error loading emails, still allow file upload
+      setStep(2);
+      showMessage('Could not load emails. You can upload a new list.', 'info');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDrag = (e) => {
@@ -164,7 +183,8 @@ const UnifiedCampaignManager = () => {
       {message.text && (
         <div style={{
           ...styles.alert,
-          ...(message.type === 'error' ? styles.alertError : styles.alertSuccess)
+          ...(message.type === 'error' ? styles.alertError : 
+              message.type === 'info' ? styles.alertInfo : styles.alertSuccess)
         }}>
           {message.text}
         </div>
@@ -639,6 +659,11 @@ const styles = {
     backgroundColor: '#fee2e2',
     color: '#991b1b',
     border: '1px solid #ef4444'
+  },
+  alertInfo: {
+    backgroundColor: '#dbeafe',
+    color: '#1e40af',
+    border: '1px solid #3b82f6'
   },
   emailHeader: {
     display: 'flex',
