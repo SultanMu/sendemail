@@ -9,7 +9,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false
+  withCredentials: false,
+  timeout: 10000
 });
 
 // Request interceptor for debugging
@@ -37,10 +38,10 @@ api.interceptors.response.use(
 );
 
 export const campaignAPI = {
-  getCampaigns: () => api.get('/campaigns/'),
-  createCampaign: (data) => api.post('/campaigns/create', data),
-  updateCampaign: (data) => api.post('/update-campaign', data),
-  deleteCampaign: (data) => api.post('/delete-campaign', data),
+  list: () => api.get('/campaigns/'),
+  create: (data) => api.post('/campaigns/create', data),
+  update: (campaignId, campaignName) => api.post(`/update-campaign?campaign_id=${campaignId}&campaign_name=${encodeURIComponent(campaignName)}`),
+  delete: (campaignId) => api.post(`/delete-campaign?campaign_id=${campaignId}`),
 };
 
 export const emailAPI = {
