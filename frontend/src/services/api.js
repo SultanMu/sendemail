@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Direct connection to backend server
-const API_BASE_URL = 'http://0.0.0.0:5000/email';
+// Use dynamic URL that works in Replit environment
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:5000/email`;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
