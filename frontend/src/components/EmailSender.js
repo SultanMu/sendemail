@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { emailAPI, campaignAPI } from '../services/api';
+import { emailAPI, campaignAPI, templateAPI } from '../services/api';
 
 const EmailSender = () => {
   const [campaigns, setCampaigns] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [campaignId, setCampaignId] = useState('');
   const [emailTemplate, setEmailTemplate] = useState('1');
   const [customMessage, setCustomMessage] = useState('');
@@ -23,7 +24,18 @@ const EmailSender = () => {
       }
     };
 
+    const fetchTemplates = async () => {
+      try {
+        const response = await templateAPI.list();
+        setTemplates(response.data);
+      } catch (error) {
+        console.error('Error fetching templates:', error);
+        showMessage('Error fetching templates', 'error');
+      }
+    };
+
     fetchCampaigns();
+    fetchTemplates();
     loadTemplatePreview(emailTemplate); // Load initial template
   }, []);
 
@@ -105,10 +117,11 @@ const EmailSender = () => {
             onChange={(e) => setEmailTemplate(e.target.value)}
             disabled={loading}
           >
-            <option value="1">AutoSAD v1</option>
-            <option value="2">XCV AI</option>
-            <option value="3">AutoSAD v2</option>
-            <option value="4">AutoSAD v3</option>
+            {templates.map((template) => (
+              <option key={template.template_id} value={template.template_id}>
+                {template.template_name} {template.type === 'custom' && '(Custom)'}
+              </option>
+            ))}
           </select>
         </div>
 

@@ -42,4 +42,10 @@ export const emailAPI = {
   }
 };
 
+// Template API
+export const templateAPI = {
+  list: () => api.get('/templates/'),
+  create: (templateData) => api.post('/templates/create/', templateData),
+};
+
 export default api;

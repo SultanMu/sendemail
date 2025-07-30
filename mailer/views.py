@@ -21,8 +21,8 @@ from drf_spectacular.utils import (
     OpenApiRequest,
 )
 from drf_spectacular.types import OpenApiTypes
-from .models import Email, Campaign
-from .serializers import EmailSerializer, CampaignSerializer
+from .models import Email, Campaign, EmailTemplate
+from .serializers import EmailSerializer, CampaignSerializer, EmailTemplateSerializer
 from django.conf import settings
 
 
@@ -649,34 +649,53 @@ class SendEmailsView(APIView):
         success_count = 0
         failure_count = 0
 
-        try:
-            if email_template == "1":
-                from_email = "autosad-temp-email.html"
-                subject = "Welcome to AUTOSAD Get Certified"
-            elif email_template == "2":
-                from_email = "XCV_AI.html"
-                subject = "Welcome onboard to XCV AI"
-            elif email_template == "3":
-                from_email = "autosad-temp-email2.html"
-                subject = "Welcome to AUTOSAD Get Certified"
-            elif email_template == "4":
-                from_email = "autosad-email-temp-3.html"
-                subject = "Welcome to AUTOSAD"
+        # Check if it's a built-in template or custom template
+        builtin_templates = {
+            "1": {"file": "autosad-temp-email.html", "subject": "Welcome to AUTOSAD Get Certified"},
+            "2": {"file": "XCV_AI.html", "subject": "Welcome onboard to XCV AI"},
+            "3": {"file": "autosad-temp-email2.html", "subject": "Welcome to AUTOSAD Get Certified"},
+            "4": {"file": "autosad-email-temp-3.html", "subject": "Welcome to AUTOSAD"}
+        }
 
-        except:
-            return Response({"error": "Error. Template not found."}, status=400)
+        is_custom_template = False
+        template_file = None
+        template_subject = None
+        custom_html_content = None
+
+        if email_template in builtin_templates:
+            # Built-in template
+            template_info = builtin_templates[email_template]
+            template_file = template_info["file"]
+            template_subject = template_info["subject"]
+        else:
+            # Check if it's a custom template
+            try:
+                custom_template = EmailTemplate.objects.get(template_id=email_template)
+                is_custom_template = True
+                template_subject = custom_template.subject
+                custom_html_content = custom_template.html_content
+            except EmailTemplate.DoesNotExist:
+                return Response({"error": "Template not found."}, status=400)
 
         for email in emails:
             try:
-                context = {
-                    "name": email.name,
-                    "message": custom_message,
-                }
-
-                html_content = render_to_string(from_email, context)
+                if is_custom_template:
+                    # For custom templates, use the stored HTML content directly
+                    # Replace placeholders if they exist
+                    html_content = custom_html_content
+                    if email.name:
+                        html_content = html_content.replace('{{name}}', email.name)
+                        html_content = html_content.replace('{{message}}', custom_message)
+                else:
+                    # For built-in templates, use render_to_string
+                    context = {
+                        "name": email.name,
+                        "message": custom_message,
+                    }
+                    html_content = render_to_string(template_file, context)
 
                 send_mail(
-                    subject=subject,
+                    subject=template_subject,
                     message="",
                     from_email="info@autosad.ai",
                     recipient_list=[email.email_address],
@@ -1136,8 +1155,7 @@ class EmailTemplatePreviewView(APIView):
                 type=str,
                 location="query",
                 required=True,
-                description="Template ID (1-4) to preview",
-                enum=["1", "2", "3", "4"],
+                description="Template ID to preview (1-4 for built-in, or custom template ID)",
             )
         ],
         responses={
@@ -1169,7 +1187,8 @@ class EmailTemplatePreviewView(APIView):
             return Response({"error": "Template ID is required"}, status=400)
 
         try:
-            template_map = {
+            # Check if it's a built-in template (1-4)
+            builtin_templates = {
                 "1": {
                     "name": "AutoSAD v1",
                     "subject": "Welcome to AUTOSAD Get Certified",
@@ -1192,24 +1211,102 @@ class EmailTemplatePreviewView(APIView):
                 }
             }
 
-            if template_id not in template_map:
-                return Response({"error": "Invalid template ID"}, status=400)
-
-            template_info = template_map[template_id]
-
-            # Render template with sample data for preview
-            context = {
-                "name": "John Doe",
-                "message": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
-            }
-
-            html_content = render_to_string(template_info["file"], context)
-
-            return Response({
-                "template_name": template_info["name"],
-                "subject": template_info["subject"], 
-                "html_content": html_content
-            }, status=200)
+            if template_id in builtin_templates:
+                template_info = builtin_templates[template_id]
+                # Render template with sample data for preview
+                context = {
+                    "name": "John Doe",
+                    "message": "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process."
+                }
+                html_content = render_to_string(template_info["file"], context)
+                
+                return Response({
+                    "template_name": template_info["name"],
+                    "subject": template_info["subject"], 
+                    "html_content": html_content
+                }, status=200)
+            else:
+                # Check if it's a custom template
+                try:
+                    custom_template = EmailTemplate.objects.get(template_id=template_id)
+                    return Response({
+                        "template_name": custom_template.template_name,
+                        "subject": custom_template.subject,
+                        "html_content": custom_template.html_content
+                    }, status=200)
+                except EmailTemplate.DoesNotExist:
+                    return Response({"error": "Template not found"}, status=404)
 
         except Exception as e:
             return Response({"error": f"Template not found: {str(e)}"}, status=500)
+
+
+class EmailTemplateListView(APIView):
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(
+                description="List of all email templates (built-in and custom)",
+                examples={
+                    "application/json": [
+                        {
+                            "template_id": "1",
+                            "template_name": "AutoSAD v1",
+                            "type": "builtin"
+                        },
+                        {
+                            "template_id": "5",
+                            "template_name": "My Custom Template",
+                            "type": "custom"
+                        }
+                    ]
+                },
+            ),
+        },
+        description="Get all available email templates including built-in and custom ones",
+    )
+    def get(self, request):
+        try:
+            templates = []
+            
+            # Add built-in templates
+            builtin_templates = [
+                {"template_id": "1", "template_name": "AutoSAD v1", "type": "builtin"},
+                {"template_id": "2", "template_name": "XCV AI", "type": "builtin"},
+                {"template_id": "3", "template_name": "AutoSAD v2", "type": "builtin"},
+                {"template_id": "4", "template_name": "AutoSAD v3", "type": "builtin"}
+            ]
+            templates.extend(builtin_templates)
+            
+            # Add custom templates
+            custom_templates = EmailTemplate.objects.all().order_by('-created_at')
+            for template in custom_templates:
+                templates.append({
+                    "template_id": str(template.template_id),
+                    "template_name": template.template_name,
+                    "type": "custom"
+                })
+            
+            return Response(templates, status=200)
+            
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
+class EmailTemplateCreateView(APIView):
+    @extend_schema(
+        request=EmailTemplateSerializer,
+        responses={
+            201: EmailTemplateSerializer,
+            400: OpenApiResponse(description="Bad Request"),
+        },
+        description="Create a new custom email template",
+    )
+    def post(self, request):
+        try:
+            serializer = EmailTemplateSerializer(data=request.data)
+            if serializer.is_valid():
+                template = serializer.save()
+                return Response(serializer.data, status=201)
+            return Response(serializer.errors, status=400)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)

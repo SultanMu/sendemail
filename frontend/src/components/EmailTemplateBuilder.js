@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useCallback } from 'react';
+import { templateAPI } from '../services/api';
 
 const EmailTemplateBuilder = () => {
   const [components, setComponents] = useState([]);
@@ -7,7 +8,56 @@ const EmailTemplateBuilder = () => {
   const [templateName, setTemplateName] = useState('');
   const [subject, setSubject] = useState('');
   const [draggedComponent, setDraggedComponent] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
   const canvasRef = useRef(null);
+
+  const showMessage = (text, type) => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: '', type: '' }), 5000);
+  };
+
+  // Save template to database
+  const saveTemplate = async () => {
+    if (!templateName.trim()) {
+      showMessage('Please enter a template name', 'error');
+      return;
+    }
+
+    if (!subject.trim()) {
+      showMessage('Please enter an email subject', 'error');
+      return;
+    }
+
+    if (components.length === 0) {
+      showMessage('Please add at least one component to your template', 'error');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const htmlContent = generateHTML();
+      
+      await templateAPI.create({
+        template_name: templateName,
+        subject: subject,
+        html_content: htmlContent
+      });
+
+      showMessage('Template saved successfully!', 'success');
+      
+      // Optionally reset form
+      setTemplateName('');
+      setSubject('');
+      setComponents([]);
+      setSelectedComponent(null);
+      
+    } catch (error) {
+      showMessage(error.response?.data?.error || 'Error saving template', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Available component types
   const componentTypes = [
@@ -601,6 +651,20 @@ const EmailTemplateBuilder = () => {
           </div>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
+              onClick={saveTemplate}
+              disabled={saving}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: saving ? '#6c757d' : '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: saving ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {saving ? 'Saving...' : 'Save Template'}
+            </button>
+            <button
               onClick={() => {
                 const html = generateHTML();
                 const blob = new Blob([html], { type: 'text/html' });
@@ -640,6 +704,20 @@ const EmailTemplateBuilder = () => {
               Preview
             </button>
           </div>
+          
+          {/* Message Display */}
+          {message.text && (
+            <div style={{
+              marginTop: '15px',
+              padding: '10px',
+              borderRadius: '4px',
+              backgroundColor: message.type === 'error' ? '#f8d7da' : '#d4edda',
+              color: message.type === 'error' ? '#721c24' : '#155724',
+              border: `1px solid ${message.type === 'error' ? '#f5c6cb' : '#c3e6cb'}`
+            }}>
+              {message.text}
+            </div>
+          )}
         </div>
 
         {/* Canvas Area */}

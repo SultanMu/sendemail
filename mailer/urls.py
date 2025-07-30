@@ -1,5 +1,18 @@
 from django.urls import path
-from .views import *
+from .views import (
+    CampaignCreateView,
+    CampaignListView,
+    XLSReaderView,
+    SendEmailsView,
+    ListEmailView,
+    UpdateCampaignView,
+    DeleteCampaignView,
+    DeleteEmailView,
+    UpdateEmailView,
+    EmailTemplatePreviewView,
+    EmailTemplateListView,
+    EmailTemplateCreateView
+)
 from .frontend_views import frontend_dashboard
 
 urlpatterns = [
@@ -17,6 +30,7 @@ urlpatterns = [
     path('send-emails/', SendEmailsView.as_view(), name='send_emails'),
     path('delete-email', DeleteEmailView.as_view(), name='delete_email'),
     path('update-email', UpdateEmailView.as_view(), name='update_email'),
-    path('template-preview/', EmailTemplatePreviewView.as_view(), name='template_preview'),
-    # path('sendemails', send_emails, name='send_emails'),
+    path('template-preview/', EmailTemplatePreviewView.as_view(), name='email-template-preview'),
+    path('templates/', EmailTemplateListView.as_view(), name='email-templates-list'),
+    path('templates/create/', EmailTemplateCreateView.as_view(), name='email-template-create'),
 ]

@@ -1,6 +1,20 @@
 
 from django.db import models
 
+class EmailTemplate(models.Model):
+    template_id = models.AutoField(primary_key=True)
+    template_name = models.CharField(max_length=255)
+    subject = models.CharField(max_length=500)
+    html_content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'mailer_email_template'
+
+    def __str__(self):
+        return self.template_name
+
 class Campaign(models.Model):
     campaign_id = models.AutoField(primary_key=True)
     campaign_name = models.CharField(max_length=255)
