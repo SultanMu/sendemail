@@ -6,4 +6,4 @@ __pycache__/
 
 # Visual Studio Code
 .vscode/*
-
+.env
