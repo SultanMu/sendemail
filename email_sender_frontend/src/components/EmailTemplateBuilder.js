@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { templateAPI } from '../services/api';
 
-const EmailTemplateBuilder = () => {
+const EmailTemplateBuilder = ({ refreshTemplates }) => {
   const [components, setComponents] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [templateName, setTemplateName] = useState('');
@@ -44,9 +44,8 @@ const EmailTemplateBuilder = () => {
       });
 
       showMessage('Template saved successfully!', 'success');
-
-      // Notify other components that a new template was created
-      window.dispatchEvent(new CustomEvent('templateCreated'));
+      
+      refreshTemplates();
 
       // Optionally reset form
       setTemplateName('');

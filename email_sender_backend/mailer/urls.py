@@ -11,7 +11,8 @@ from .views import (
     UpdateEmailView,
     EmailTemplatePreviewView,
     EmailTemplateListView,
-    EmailTemplateCreateView
+    EmailTemplateCreateView,
+    EmailTemplateUpdateView
 )
 from .frontend_views import frontend_dashboard
 
@@ -33,4 +34,5 @@ urlpatterns = [
     path('template-preview/', EmailTemplatePreviewView.as_view(), name='email-template-preview'),
     path('templates/', EmailTemplateListView.as_view(), name='email-templates-list'),
     path('templates/create/', EmailTemplateCreateView.as_view(), name='email-template-create'),
+    path('templates/update/<int:template_id>/', EmailTemplateUpdateView.as_view(), name='email-template-update'),
 ]

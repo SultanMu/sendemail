@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { campaignAPI, emailAPI } from '../services/api';
 
-const UnifiedCampaignManager = () => {
+const UnifiedCampaignManager = ({ campaigns, refreshCampaigns }) => {
   const [step, setStep] = useState(1);
   const [campaignName, setCampaignName] = useState('');
   const [selectedCampaign, setSelectedCampaign] = useState(null);
-  const [campaigns, setCampaigns] = useState([]);
   const [file, setFile] = useState(null);
   const [emails, setEmails] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -13,25 +12,9 @@ const UnifiedCampaignManager = () => {
   const [dragActive, setDragActive] = useState(false);
   const [isCreatingNew, setIsCreatingNew] = useState(true);
 
-  useEffect(() => {
-    loadCampaigns();
-  }, []);
-
   const showMessage = (text, type) => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: '', type: '' }), 5000);
-  };
-
-  const loadCampaigns = async () => {
-    try {
-      setLoading(true);
-      const response = await campaignAPI.list();
-      setCampaigns(response.data);
-    } catch (error) {
-      showMessage('Error loading campaigns', 'error');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const createCampaign = async (e) => {
@@ -47,7 +30,7 @@ const UnifiedCampaignManager = () => {
       setSelectedCampaign(response.data);
       setStep(2);
       showMessage('Campaign created successfully!', 'success');
-      loadCampaigns(); // Refresh the campaign list
+      refreshCampaigns(); // Refresh the campaign list
     } catch (error) {
       showMessage(error.response?.data?.error || 'Error creating campaign', 'error');
     } finally {
@@ -107,7 +90,7 @@ const UnifiedCampaignManager = () => {
 
     try {
       setLoading(true);
-      const response = await emailAPI.upload(selectedCampaign.campaign_id, file);
+      await emailAPI.upload(selectedCampaign.campaign_id, file);
       showMessage('Emails uploaded successfully!', 'success');
       setStep(3);
       loadEmails();

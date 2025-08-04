@@ -53,7 +53,7 @@ export const emailAPI = {
   delete: (emailAddress, campaignId) => 
     api.post(`/delete-email?email_add=${encodeURIComponent(emailAddress)}&campaign_id=${campaignId}`),
   send: (campaignId, emailTemplate, customMessage) => {
-    const url = `/send-emails/?campaign_id=${campaignId}&email_template=${emailTemplate}`;
+    const url = `/send-emails/?campaign_id=${campaignId}&template_id=${emailTemplate}`;
     return api.post(url, { message: customMessage });
   },
   getTemplatePreview: (templateId) => {
@@ -65,6 +65,7 @@ export const emailAPI = {
 export const templateAPI = {
   list: () => api.get('/templates/'),
   create: (templateData) => api.post('/templates/create/', templateData),
+  update: (templateId, templateData) => api.post(`/templates/update/${templateId}/`, templateData),
 };
 
 export default api;

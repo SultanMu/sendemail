@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { emailAPI, campaignAPI, templateAPI } from '../services/api';
+import { emailAPI, campaignAPI } from '../services/api';
 
 const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaigns }) => {
   const [campaignEmails, setCampaignEmails] = useState([]);
@@ -24,12 +24,12 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
     fetchCampaignEmails();
   }, [campaignId]);
 
-  const selectedCampaign = campaigns.find(c => c.campaign_id === campaignId);
+  const selectedCampaign = campaigns.find(c => c.campaign_id.toString() === campaignId);
   const sampleRecipient = campaignEmails.length > 0 ? campaignEmails[0] : null;
   const recipientEmail = sampleRecipient?.email || 'sample@example.com';
   const recipientName = sampleRecipient?.name || 'Sample Recipient';
 
-  const defaultMessage = 'Thank you for applying to the AUTOSAD Get Certified program. We\'re thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.';
+  const defaultMessage = "Thank you for applying to the AUTOSAD Get Certified program. We're thrilled to have you on board and look forward to helping you gain the knowledge and credentials to excel in the AUTOSAD ecosystem. To finalize your enrollment and start your certification journey, simply click the link below to complete your registration process.";
   const finalMessage = customMessage || defaultMessage;
 
   return (
@@ -146,11 +146,9 @@ const FinalEmailPreview = ({ templatePreview, customMessage, campaignId, campaig
   );
 };
 
-const EmailSender = () => {
-  const [campaigns, setCampaigns] = useState([]);
-  const [templates, setTemplates] = useState([]);
+const EmailSender = ({ campaigns, templates }) => {
   const [campaignId, setCampaignId] = useState('');
-  const [emailTemplate, setEmailTemplate] = useState('1');
+  const [emailTemplate, setEmailTemplate] = useState('');
   const [customMessage, setCustomMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -158,54 +156,13 @@ const EmailSender = () => {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [previewError, setPreviewError] = useState(null);
 
-  const fetchTemplates = async () => {
-    try {
-      const response = await templateAPI.list();
-      setTemplates(response.data);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-      showMessage('Error fetching templates', 'error');
+  useEffect(() => {
+    if (emailTemplate) {
+      loadTemplatePreview(emailTemplate);
+    } else {
+      setTemplatePreview(null);
     }
-  };
-
-  useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        const response = await campaignAPI.list();
-        setCampaigns(response.data);
-      } catch (error) {
-        console.error('Error fetching campaigns:', error);
-        showMessage('Error fetching campaigns', 'error');
-      }
-    };
-
-    fetchCampaigns();
-    fetchTemplates();
-    loadTemplatePreview(emailTemplate); // Load initial template
-
-    // Listen for custom events when new templates are created
-    const handleTemplateCreated = () => {
-      fetchTemplates();
-    };
-
-    window.addEventListener('templateCreated', handleTemplateCreated);
-
-    return () => {
-      window.removeEventListener('templateCreated', handleTemplateCreated);
-    };
-  }, []);
-
-  useEffect(() => {
-    loadTemplatePreview(emailTemplate);
   }, [emailTemplate]);
-
-  // Expose refresh function globally for other components to use
-  useEffect(() => {
-    window.refreshTemplates = fetchTemplates;
-    return () => {
-      delete window.refreshTemplates;
-    };
-  }, []);
 
   const loadTemplatePreview = async (templateId) => {
     try {
@@ -266,8 +223,8 @@ const EmailSender = () => {
             <option value="">Select a campaign</option>
             {campaigns.map((campaign) => (
               <option key={campaign.campaign_id} value={campaign.campaign_id}>
-                    {campaign.campaign_name}
-                  </option>
+                {campaign.campaign_name}
+              </option>
             ))}
           </select>
         </div>
@@ -282,8 +239,8 @@ const EmailSender = () => {
             disabled={loading}
           >
             <option value="">Select a template</option>
-            {templates.map((template, index) => (
-              <option key={`${template.template_id}-${index}`} value={template.template_id}>
+            {templates.map((template) => (
+              <option key={template.template_id} value={template.template_id}>
                 {template.template_name}
               </option>
             ))}

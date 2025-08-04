@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import UnifiedCampaignManager from './components/UnifiedCampaignManager';
 import EmailSender from './components/EmailSender';
 import EmailTemplateBuilder from './components/EmailTemplateBuilder';
+import EmailTemplateEditor from './components/EmailTemplateEditor';
+import { campaignAPI, templateAPI } from './services/api';
 
 function App() {
+  const [campaigns, setCampaigns] = useState([]);
+  const [templates, setTemplates] = useState([]);
+
+  const fetchCampaigns = async () => {
+    try {
+      const response = await campaignAPI.list();
+      setCampaigns(response.data);
+    } catch (error) {
+      console.error('Error fetching campaigns:', error);
+    }
+  };
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await templateAPI.list();
+      setTemplates(response.data);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCampaigns();
+    fetchTemplates();
+  }, []);
+
   return (
     <div style={styles.app}>
       <header style={styles.header}>
@@ -11,9 +39,19 @@ function App() {
         <p style={styles.subtitle}>Modern unified campaign management and email sending</p>
       </header>
 
-      <UnifiedCampaignManager />
-      <EmailSender />
-      <EmailTemplateBuilder />
+      <UnifiedCampaignManager 
+        campaigns={campaigns}
+        refreshCampaigns={fetchCampaigns} 
+      />
+      <EmailSender 
+        campaigns={campaigns} 
+        templates={templates}
+      />
+      <EmailTemplateBuilder refreshTemplates={fetchTemplates} />
+      <EmailTemplateEditor 
+        templates={templates} 
+        refreshTemplates={fetchTemplates}
+      />
     </div>
   );
 }
