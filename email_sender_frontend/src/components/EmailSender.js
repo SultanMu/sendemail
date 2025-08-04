@@ -281,13 +281,10 @@ const EmailSender = () => {
             onChange={(e) => setEmailTemplate(e.target.value)}
             disabled={loading}
           >
-            <option value="1">AutoSAD v1</option>
-            <option value="2">XCV AI</option>
-            <option value="3">AutoSAD v2</option>
-            <option value="4">AutoSAD v3</option>
+            <option value="">Select a template</option>
             {templates.map((template, index) => (
-              <option key={`${template.template_id}-${template.type}-${index}`} value={template.template_id}>
-                {template.template_name} {template.type === 'custom' && '(Custom)'}
+              <option key={`${template.template_id}-${index}`} value={template.template_id}>
+                {template.template_name}
               </option>
             ))}
           </select>

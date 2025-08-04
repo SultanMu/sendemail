@@ -58,3 +58,4 @@ Thumbs.db
 # Ignore all .env files, but not examples
 *.env
 !*.env.example
+email_sender_backend/.env

@@ -14,6 +14,10 @@ echo "PostgreSQL is ready."
 echo "Applying database migrations..."
 python manage.py migrate
 
+# Populate email templates
+echo "Populating email templates..."
+python manage.py populate_templates
+
 # Start the Django server
 echo "Starting Django server on port 5000..."
 exec python manage.py runserver 0.0.0.0:5000
