@@ -4,6 +4,7 @@ import EmailSender from './components/EmailSender';
 import EmailTemplateBuilder from './components/EmailTemplateBuilder';
 import EmailTemplateEditor from './components/EmailTemplateEditor';
 import { campaignAPI, templateAPI } from './services/api';
+import Tabs from './components/Tabs';
 
 function App() {
   const [campaigns, setCampaigns] = useState([]);
@@ -39,19 +40,29 @@ function App() {
         <p style={styles.subtitle}>Modern unified campaign management and email sending</p>
       </header>
 
-      <UnifiedCampaignManager 
-        campaigns={campaigns}
-        refreshCampaigns={fetchCampaigns} 
-      />
-      <EmailSender 
-        campaigns={campaigns} 
-        templates={templates}
-      />
-      <EmailTemplateBuilder refreshTemplates={fetchTemplates} />
-      <EmailTemplateEditor 
-        templates={templates} 
-        refreshTemplates={fetchTemplates}
-      />
+      <Tabs>
+        <div label="Campaign Management">
+          <UnifiedCampaignManager 
+            campaigns={campaigns}
+            refreshCampaigns={fetchCampaigns} 
+          />
+        </div>
+        <div label="Send Email">
+          <EmailSender 
+            campaigns={campaigns} 
+            templates={templates}
+          />
+        </div>
+        <div label="Create Template">
+          <EmailTemplateBuilder refreshTemplates={fetchTemplates} />
+        </div>
+        <div label="Edit Email Template">
+          <EmailTemplateEditor 
+            templates={templates} 
+            refreshTemplates={fetchTemplates}
+          />
+        </div>
+      </Tabs>
     </div>
   );
 }
